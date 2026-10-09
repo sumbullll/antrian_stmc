@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Display Ruang Tunggu - Sistem Antrian</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            overflow: hidden; /* Hide scrollbars for TV display */
+        }
+        .display-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .header-bar {
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+        .theme-pangkep { background-color: #198754; } /* Success Green */
+        .theme-makassar { background-color: #dc3545; } /* Danger Red */
+        
+        .main-display {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+        
+        .number-box {
+            font-size: 15vw;
+            font-weight: 900;
+            line-height: 1;
+            margin-bottom: 20px;
+        }
+        
+        .name-box {
+            font-size: 4vw;
+            color: #6c757d;
+        }
+    </style>
+</head>
+<body>
+    <div class="display-container">
+        <!-- Configuration Overlay (hidden during normal operation) -->
+        <div id="config-overlay" class="position-absolute top-0 start-0 w-100 h-100 bg-white d-flex align-items-center justify-content-center" style="z-index: 1000;">
+            <div class="text-center">
+                <h2>Pilih Layar Display</h2>
+                <div class="mt-4">
+                    <button class="btn btn-success btn-lg m-2" onclick="setDisplay('P')">Medical Center Pangkep</button>
+                    <button class="btn btn-danger btn-lg m-2" onclick="setDisplay('M')">PMI Makassar</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="header-bar" class="header-bar">
+            <h1 id="tv-title">Antrian Donor Darah</h1>
+        </div>
+
+        <div class="main-display">
+            <h2 class="text-muted mb-4">Nomor Antrian:</h2>
+            <div id="tv-number" class="number-box">--</div>
+            <div id="tv-name" class="name-box">Silakan Menunggu</div>
+        </div>
+
+        <div class="bg-dark text-white p-3 text-center marquee-container">
+            <marquee behavior="scroll" direction="left" class="fs-4">
+                Terima kasih atas partisipasi Anda dalam mendonorkan darah. Setetes darah Anda, nyawa bagi mereka.
+            </marquee>
+        </div>
+    </div>
+
+    <!-- Hidden audio element to trick some browser autoplay policies, though interaction might still be needed -->
+    <button id="btn-init-audio" class="btn btn-secondary position-absolute bottom-0 start-0 m-3" style="opacity: 0.1; z-index: 999;">Init Audio</button>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/config.js"></script>
+    <script src="js/display.js"></script>
+</body>
+</html>

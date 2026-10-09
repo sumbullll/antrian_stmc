@@ -1,0 +1,30 @@
+/* style.css */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Make things look a bit softer */
+.card {
+    border-radius: 12px;
+    border: none;
+}
+
+/* Scanner or general mobile fixes */
+input[type="text"] {
+    border-radius: 8px;
+}
+
+.btn {
+    border-radius: 8px;
+}
+
+/* Animations for display changes */
+@keyframes flash {
+    0% { opacity: 1; }
+    50% { opacity: 0.5; color: #ffc107; }
+    100% { opacity: 1; }
+}
+
+.highlight-update {
+    animation: flash 1.5s ease-in-out;
+}
