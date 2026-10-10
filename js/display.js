@@ -55,7 +55,9 @@ async function fetchCurrentDisplay() {
     if (!displayTim) return;
 
     try {
-        const today = new Date().toISOString().split('T')[0];
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const startIso = startOfDay.toISOString();
         
         // Fetch antrian yang sedang dipanggil (semua yang aktif)
         const panggilPromise = supabaseClient
@@ -63,7 +65,7 @@ async function fetchCurrentDisplay() {
             .select('*')
             .eq('kode_tim', displayTim)
             .eq('status', 'dipanggil')
-            .gte('waktu_ambil', `${today}T00:00:00Z`)
+            .gte('waktu_ambil', startIso)
             .order('waktu_panggil', { ascending: false });
             
         // Fetch antrian yang sedang menunggu
@@ -72,7 +74,7 @@ async function fetchCurrentDisplay() {
             .select('nomor_urut, nama_pendonor')
             .eq('kode_tim', displayTim)
             .eq('status', 'menunggu')
-            .gte('waktu_ambil', `${today}T00:00:00Z`)
+            .gte('waktu_ambil', startIso)
             .order('nomor_urut', { ascending: true });
 
         const [resPanggil, resTunggu] = await Promise.all([panggilPromise, tungguPromise]);

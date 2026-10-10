@@ -78,13 +78,16 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchCurrentServing(tim) {
         try {
             // Cari antrian dengan status 'dipanggil' hari ini untuk tim ini
-            const today = new Date().toISOString().split('T')[0];
+            const startOfDay = new Date();
+            startOfDay.setHours(0, 0, 0, 0);
+            const startIso = startOfDay.toISOString();
+            
             const { data, error } = await supabaseClient
                 .from('antrian')
                 .select('nomor_urut')
                 .eq('kode_tim', tim)
                 .eq('status', 'dipanggil')
-                .gte('waktu_ambil', `${today}T00:00:00Z`)
+                .gte('waktu_ambil', startIso)
                 .order('waktu_panggil', { ascending: false })
                 .limit(1);
 

@@ -40,12 +40,14 @@ document.addEventListener('DOMContentLoaded', () => {
     fetchActive();
 
     async function fetchQueue() {
-        const today = new Date().toISOString().split('T')[0];
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const startIso = startOfDay.toISOString();
         const { data, error } = await supabaseClient
             .from('antrian')
             .select('*')
             .eq('kode_tim', currentTim)
-            .gte('waktu_ambil', `${today}T00:00:00Z`)
+            .gte('waktu_ambil', startIso)
             .order('nomor_urut', { ascending: true });
 
         if (data) {
@@ -90,13 +92,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     async function fetchActive() {
-        const today = new Date().toISOString().split('T')[0];
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const startIso = startOfDay.toISOString();
         const { data, error } = await supabaseClient
             .from('antrian')
             .select('*')
             .eq('kode_tim', currentTim)
             .eq('status', 'dipanggil')
-            .gte('waktu_ambil', `${today}T00:00:00Z`)
+            .gte('waktu_ambil', startIso)
             .order('waktu_panggil', { ascending: false });
 
         renderActiveQueues(data || []);
@@ -164,13 +168,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tombol Panggil Selanjutnya (Selalu panggil orang baru)
     btnPanggil.addEventListener('click', async () => {
-        const today = new Date().toISOString().split('T')[0];
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const startIso = startOfDay.toISOString();
         const { data } = await supabaseClient
             .from('antrian')
             .select('id_antrian')
             .eq('kode_tim', currentTim)
             .eq('status', 'menunggu')
-            .gte('waktu_ambil', `${today}T00:00:00Z`)
+            .gte('waktu_ambil', startIso)
             .order('nomor_urut', { ascending: true })
             .limit(1);
 
@@ -217,14 +223,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Fitur Ekspor ke Excel (CSV)
     document.getElementById('btn-export').addEventListener('click', async () => {
-        const today = new Date().toISOString().split('T')[0];
+        const startOfDay = new Date();
+        startOfDay.setHours(0, 0, 0, 0);
+        const startIso = startOfDay.toISOString();
         
         try {
             // Ambil seluruh data antrian pada hari ini (baik yang selesai, lewat, maupun menunggu)
             const { data, error } = await supabaseClient
                 .from('antrian')
                 .select('*')
-                .gte('waktu_ambil', `${today}T00:00:00Z`)
+                .gte('waktu_ambil', startIso)
                 .order('kode_tim', { ascending: true })
                 .order('nomor_urut', { ascending: true });
 
