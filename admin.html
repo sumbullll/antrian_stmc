@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - Sistem Antrian</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body class="bg-light">
     <!-- Navbar -->
@@ -13,6 +13,9 @@
         <div class="container-fluid">
             <a class="navbar-brand" href="#">Dashboard Admin Donor Darah</a>
             <div class="d-flex text-white align-items-center">
+                <button id="btn-export" class="btn btn-sm btn-success me-3 d-flex align-items-center">
+                    <span class="me-1">📊</span> Ekspor Excel
+                </button>
                 <span class="me-3">Tim Bertugas: <strong id="admin-tim-display">--</strong></span>
                 <select id="login-tim" class="form-select form-select-sm" style="width: auto;">
                     <option value="P">Pangkep (P)</option>
@@ -23,30 +26,56 @@
     </nav>
 
     <div class="container">
+        <!-- Statistik Harian -->
+        <div class="row mb-4">
+            <div class="col-md-4">
+                <div class="card bg-primary text-white shadow-sm mb-3 mb-md-0">
+                    <div class="card-body text-center py-2">
+                        <h6 class="m-0 text-white-50">Total Pendaftar</h6>
+                        <h3 class="m-0 fw-bold" id="stat-total">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-success text-white shadow-sm mb-3 mb-md-0">
+                    <div class="card-body text-center py-2">
+                        <h6 class="m-0 text-white-50">Sudah Selesai</h6>
+                        <h3 class="m-0 fw-bold" id="stat-selesai">0</h3>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card bg-warning text-dark shadow-sm">
+                    <div class="card-body text-center py-2">
+                        <h6 class="m-0 text-dark-50">Sisa Antrian</h6>
+                        <h3 class="m-0 fw-bold" id="stat-sisa">0</h3>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             <!-- Left Column: Current Serving & Actions -->
-            <div class="col-md-6 mb-4">
-                <div class="card shadow-sm h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="card-title mb-0">Antrian Saat Ini</h5>
+            <div class="col-md-7 mb-4">
+                <div class="card shadow-sm h-100 border-primary">
+                    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">Sedang Dilayani (Aktif)</h5>
+                        <span class="badge bg-light text-primary rounded-pill" id="active-count-badge">0</span>
                     </div>
-                    <div class="card-body text-center d-flex flex-column justify-content-center">
-                        <h1 class="display-1 fw-bold" id="admin-current-nomor">--</h1>
-                        <h3 class="text-muted" id="admin-current-nama">Tidak ada antrian aktif</h3>
-                        
-                        <div class="mt-4">
-                            <button id="btn-selesai" class="btn btn-success btn-lg me-2" disabled>Selesai</button>
-                            <button id="btn-lewat" class="btn btn-warning btn-lg" disabled>Lewati (Skip)</button>
+                    <div class="card-body bg-light p-3" id="active-queue-container" style="max-height: 500px; overflow-y: auto;">
+                        <div class="text-center text-muted py-5" id="no-active-msg">
+                            <h4 class="fw-light">Belum ada pasien aktif</h4>
+                            <small>Klik "Panggil Selanjutnya" untuk memulai</small>
                         </div>
                     </div>
-                    <div class="card-footer text-center">
-                        <button id="btn-panggil-selanjutnya" class="btn btn-primary btn-lg w-100">Panggil Selanjutnya</button>
+                    <div class="card-footer bg-white border-top pb-3 pt-3 px-4 text-center">
+                        <button id="btn-panggil-selanjutnya" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow-sm" disabled>📢 Panggil Selanjutnya</button>
                     </div>
                 </div>
             </div>
 
             <!-- Right Column: Queue List & Manual Input -->
-            <div class="col-md-6 mb-4">
+            <div class="col-md-5 mb-4">
                 <!-- Manual Input -->
                 <div class="card shadow-sm mb-4">
                     <div class="card-header bg-secondary text-white">

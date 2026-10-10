@@ -24,7 +24,7 @@ window.setDisplay = function(tim) {
     
     if (tim === 'P') {
         header.classList.add('theme-pangkep');
-        title.innerText = 'Medical Center Pangkep (P)';
+        title.innerText = 'Semen Tonasa Medical Center (P)';
     } else {
         header.classList.add('theme-makassar');
         title.innerText = 'PMI Makassar (M)';
@@ -56,23 +56,47 @@ async function fetchCurrentDisplay() {
 
     try {
         const today = new Date().toISOString().split('T')[0];
-        const { data, error } = await supabase
+        
+        // Fetch antrian yang sedang dipanggil (semua yang aktif)
+        const panggilPromise = supabaseClient
             .from('antrian')
             .select('*')
             .eq('kode_tim', displayTim)
             .eq('status', 'dipanggil')
             .gte('waktu_ambil', `${today}T00:00:00Z`)
-            .order('waktu_panggil', { ascending: false })
-            .limit(1);
-
-        if (data && data.length > 0) {
-            const currentItem = data[0];
+            .order('waktu_panggil', { ascending: false });
             
-            // Cek apakah ini panggilan baru berdasarkan waktu_panggil
+        // Fetch antrian yang sedang menunggu
+        const tungguPromise = supabaseClient
+            .from('antrian')
+            .select('nomor_urut, nama_pendonor')
+            .eq('kode_tim', displayTim)
+            .eq('status', 'menunggu')
+            .gte('waktu_ambil', `${today}T00:00:00Z`)
+            .order('nomor_urut', { ascending: true });
+
+        const [resPanggil, resTunggu] = await Promise.all([panggilPromise, tungguPromise]);
+
+        // Selalu update UI dengan daftar yang aktif saat ini
+        updateUI(resPanggil.data || []);
+
+        // Audio Announcement hanya dipicu oleh pembaruan pada item yang paling baru
+        if (resPanggil.data && resPanggil.data.length > 0) {
+            const currentItem = resPanggil.data[0];
             if (lastUpdate !== currentItem.waktu_panggil) {
-                updateUI(currentItem);
                 speakAnnouncement(currentItem);
                 lastUpdate = currentItem.waktu_panggil;
+            }
+        }
+        
+        // Update Vertical Marquee (Daftar Menunggu)
+        if (resTunggu.data) {
+            const waitingListMarquee = document.getElementById('tv-waiting-list');
+            if (resTunggu.data.length > 0) {
+                const listHTML = resTunggu.data.map(q => `<div class="py-3 border-bottom border-light">${displayTim}-${String(q.nomor_urut).padStart(3, '0')}<br><small class="text-muted">${q.nama_pendonor}</small></div>`).join('');
+                waitingListMarquee.innerHTML = listHTML;
+            } else {
+                waitingListMarquee.innerHTML = `<div class="py-5 text-muted fw-normal">Belum ada antrian...</div>`;
             }
         }
     } catch (err) {
@@ -80,24 +104,102 @@ async function fetchCurrentDisplay() {
     }
 }
 
-function updateUI(item) {
-    const numBox = document.getElementById('tv-number');
-    const nameBox = document.getElementById('tv-name');
-    
-    numBox.innerText = `${item.kode_tim}-${item.nomor_urut}`;
-    nameBox.innerText = item.nama_pendonor;
+function updateUI(items) {
+    const grid = document.getElementById('tv-active-grid');
+    grid.innerHTML = ''; // Kosongkan grid
 
-    // Tambah efek flash
-    numBox.classList.remove('highlight-update');
-    void numBox.offsetWidth; // trigger reflow
-    numBox.classList.add('highlight-update');
+    if (!items || items.length === 0) {
+        grid.innerHTML = `
+            <div class="col-12 text-muted">
+                <h1 class="display-1 fw-bold mt-5">--</h1>
+                <h3 class="name-box">Silakan Menunggu</h3>
+            </div>`;
+        return;
+    }
+
+    // Jika lebih dari 2 aktif, gunakan col-md-6 agar jadi 2 kolom (grid 2x2 dst)
+    // Jika hanya 1-2, bisa gunakan ukuran kolom dinamis
+    const colClass = items.length > 1 ? 'col-md-6' : 'col-12';
+
+    items.forEach((item, index) => {
+        const isLatest = index === 0; // Item pertama adalah yang paling baru dipanggil
+        const boxClass = isLatest ? 'border-primary border-3 highlight-update' : 'border-light border-1';
+        const shadowClass = isLatest ? 'shadow-lg' : 'shadow-sm';
+        
+        const cardHTML = `
+            <div class="${colClass}">
+                <div class="card h-100 ${boxClass} ${shadowClass}">
+                    <div class="card-body py-4">
+                        <div style="font-size: ${items.length > 2 ? '6vw' : '10vw'}; font-weight: 900; line-height: 1; color: #212529;">
+                            ${item.kode_tim}-${String(item.nomor_urut).padStart(3, '0')}
+                        </div>
+                        <div style="font-size: ${items.length > 2 ? '2vw' : '3vw'}; color: #6c757d; margin-top: 15px;">
+                            ${item.nama_pendonor}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        grid.insertAdjacentHTML('beforeend', cardHTML);
+    });
 }
 
-function speakAnnouncement(item) {
+// --- Fitur Jam Digital ---
+setInterval(() => {
+    const clockObj = new Date();
+    const timeString = clockObj.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const dateString = clockObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const clockEl = document.getElementById('tv-clock');
+    if(clockEl) clockEl.innerText = `${dateString}  |  ${timeString}`;
+}, 1000);
+
+// --- Fitur Suara Ting-Tong (Web Audio API) ---
+const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+function playChime() {
+    return new Promise((resolve) => {
+        if(audioCtx.state === 'suspended') audioCtx.resume();
+        
+        // Buat oscillator untuk nada pertama (Ting)
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
+        gain1.gain.setValueAtTime(0, audioCtx.currentTime);
+        gain1.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
+        gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start();
+        osc1.stop(audioCtx.currentTime + 1);
+
+        // Buat oscillator untuk nada kedua (Tong)
+        setTimeout(() => {
+            const osc2 = audioCtx.createOscillator();
+            const gain2 = audioCtx.createGain();
+            osc2.type = 'sine';
+            osc2.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
+            gain2.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain2.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
+            gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
+            osc2.connect(gain2);
+            gain2.connect(audioCtx.destination);
+            osc2.start();
+            osc2.stop(audioCtx.currentTime + 1.5);
+        }, 500);
+
+        // Beri jeda 1.5 detik sebelum TTS ngomong
+        setTimeout(resolve, 1500);
+    });
+}
+
+async function speakAnnouncement(item) {
     if (!('speechSynthesis' in window)) return;
 
-    const timName = item.kode_tim === 'P' ? 'Medical Center Pangkep' : 'PMI Makassar';
-    const text = `Nomor antrian, ${item.kode_tim}, ${item.nomor_urut}, atas nama ${item.nama_pendonor}, silakan menuju tim ${timName}.`;
+    // Putar bel Ting-Tong terlebih dahulu
+    await playChime();
+
+    const timName = item.kode_tim === 'P' ? 'Semen Tonasa Medical Center' : 'PMI Makassar';
+    const text = `Nomor antrian, ${item.kode_tim}, ${String(item.nomor_urut).padStart(3, '0')}, atas nama ${item.nama_pendonor}, silakan menuju tim ${timName}.`;
 
     const msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'id-ID';

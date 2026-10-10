@@ -3,62 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Antrian Donor Darah - Pendaftaran</title>
+    <title>Portal Sistem Antrian Donor Darah - STMC</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
 </head>
 <body class="bg-light">
+    <!-- Navbar / Header dengan Logo -->
+    <nav class="navbar shadow-sm py-3 mb-4" style="background-color: #fff4e6; border-bottom: 4px solid #d32f2f;">
+        <div class="container d-flex justify-content-between align-items-center">
+            
+            <!-- Logo Kiri: SIG dan Semen Tonasa -->
+            <div class="d-flex align-items-center">
+                <img src="img/logo-sig.png" alt="SIG" height="50" class="me-3" onerror="this.src='https://via.placeholder.com/100x50?text=Logo+SIG'">
+                <img src="img/logo-tonasa.png" alt="Semen Tonasa" height="55" onerror="this.src='https://via.placeholder.com/100x50?text=Semen+Tonasa'">
+            </div>
+            
+            <!-- Judul Tengah -->
+            <div class="text-center">
+                <h4 class="m-0 fw-bold text-dark" style="letter-spacing: 1px;">SISTEM ANTRIAN DONOR DARAH</h4>
+                <small class="text-muted fw-bold">Semen Tonasa Medical Center (STMC)</small>
+            </div>
+            
+            <!-- Logo Kanan: Medical Center & HUT 58 -->
+            <div class="d-flex align-items-center">
+                <img src="img/logo-medcenter.png" alt="Medical Center" height="55" class="me-3" onerror="this.src='https://via.placeholder.com/100x50?text=Med+Center'">
+                <img src="img/logo-hut58.png" alt="HUT 58" height="55" onerror="this.src='https://via.placeholder.com/80x50?text=HUT+58'">
+            </div>
+            
+        </div>
+    </nav>
+
     <div class="container mt-5">
         <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-4 text-center">
-                <div class="mb-4">
-                    <h2 class="text-danger fw-bold">STMC Donor Darah</h2>
-                    <h5 class="text-muted">Semen Tonasa</h5>
-                </div>
-                
-                <div id="registration-section" class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Silakan Masukkan Nama Anda</h5>
-                        <form id="form-daftar">
-                            <div class="mb-3">
-                                <input type="text" id="nama_pendonor" class="form-control form-control-lg text-center" placeholder="Nama Panggilan" required>
-                            </div>
-                            <div class="mb-3 text-start">
-                                <label class="form-label text-muted small">Jalur Antrian:</label>
-                                <select id="kode_tim" class="form-select form-select-lg" disabled>
-                                    <option value="">(Scan QR untuk memilih jalur)</option>
-                                    <option value="P">Medical Center Pangkep (P)</option>
-                                    <option value="M">PMI Makassar (M)</option>
-                                </select>
-                                <small class="text-danger d-none" id="error-jalur">Silakan scan QR code yang sesuai di meja pendaftaran.</small>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-lg w-100" id="btn-daftar" disabled>Ambil Nomor Antrian</button>
-                        </form>
+            <div class="col-lg-8 text-center mb-5">
+                <h3 class="fw-light">Selamat Datang, Operator!</h3>
+                <p class="text-muted">Pilih menu navigasi di bawah ini untuk mengelola operasional antrian donor darah.</p>
+            </div>
+        </div>
+
+        <div class="row g-4 justify-content-center">
+            
+            <!-- Menu Layar TV -->
+            <div class="col-md-5 col-lg-4">
+                <div class="card h-100 shadow-sm border-0 text-center hover-shadow transition-all">
+                    <div class="card-body p-5">
+                        <div class="display-3 text-primary mb-3">📺</div>
+                        <h4 class="card-title fw-bold">Layar TV Ruang Tunggu</h4>
+                        <p class="card-text text-muted small">Tampilkan layar ini di Smart TV ruang tunggu untuk menampilkan nomor dan nama yang dipanggil.</p>
+                        <a href="display.html" target="_blank" class="btn btn-outline-primary w-100 mt-3 rounded-pill">Buka Mode TV</a>
                     </div>
                 </div>
+            </div>
 
-                <div id="ticket-section" class="card shadow-sm mb-4 d-none">
-                    <div class="card-body">
-                        <h6 class="text-muted">Nomor Antrian Anda:</h6>
-                        <h1 class="display-1 fw-bold text-primary" id="nomor-antrian-display">--</h1>
-                        <p class="lead mb-2">Jalur: <span id="jalur-display" class="fw-bold">--</span></p>
-                        <p class="text-muted mb-4">Nama: <span id="nama-display" class="fw-bold">--</span></p>
-                        
-                        <div class="alert alert-info">
-                            <strong>Sedang Dilayani:</strong>
-                            <h3 id="current-serving-display">--</h3>
-                        </div>
+            <!-- Menu Dashboard Admin -->
+            <div class="col-md-5 col-lg-4">
+                <div class="card h-100 shadow-sm border-0 text-center hover-shadow transition-all">
+                    <div class="card-body p-5">
+                        <div class="display-3 text-success mb-3">👨‍⚕️</div>
+                        <h4 class="card-title fw-bold">Dashboard Operator</h4>
+                        <p class="card-text text-muted small">Panel kontrol bagi petugas medis untuk memanggil antrian dan mengelola data peserta.</p>
+                        <a href="admin.html" target="_blank" class="btn btn-outline-success w-100 mt-3 rounded-pill">Buka Dashboard</a>
                     </div>
                 </div>
+            </div>
 
+            <!-- Menu Form Pendaftaran (Simulasi) -->
+            <div class="col-md-5 col-lg-4">
+                <div class="card h-100 shadow-sm border-0 text-center hover-shadow transition-all">
+                    <div class="card-body p-5">
+                        <div class="display-3 text-warning mb-3">📱</div>
+                        <h4 class="card-title fw-bold">Form Pendaftaran</h4>
+                        <p class="card-text text-muted small">Simulasi halaman yang akan dilihat peserta saat mereka melakukan pemindaian (scan) QR Code di meja.</p>
+                        <a href="daftar.html" target="_blank" class="btn btn-outline-warning text-dark fw-bold w-100 mt-3 rounded-pill">Lihat Form</a>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Instruksi QR Code -->
+        <div class="row justify-content-center mt-5">
+            <div class="col-lg-10">
+                <div class="alert alert-secondary border-0 shadow-sm">
+                    <h5 class="alert-heading fw-bold"><span class="text-danger">Info QR Code:</span> Panduan Pembuatan QR untuk Peserta</h5>
+                    <hr>
+                    <p class="mb-0">Saat aplikasi ini sudah *online* (dideploy ke Vercel/hosting), gunakan *link* di bawah ini untuk membuat atau men-*generate* gambar QR Code yang akan dicetak dan diletakkan di atas meja:</p>
+                    <ul class="mt-2">
+                        <li><strong>Meja Tim Pangkep:</strong> <code>https://domain-anda.com/daftar.html?tim=P</code></li>
+                        <li><strong>Meja Tim Makassar:</strong> <code>https://domain-anda.com/daftar.html?tim=M</code></li>
+                    </ul>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- Supabase and App JS -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="js/config.js"></script>
-    <script src="js/app.js"></script>
+    <!-- Tambahan CSS Inline agar cantik -->
+    <style>
+        .hover-shadow { transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .hover-shadow:hover { transform: translateY(-5px); box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+        .transition-all { transition: all 0.3s ease-in-out; }
+    </style>
 </body>
 </html>

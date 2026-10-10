@@ -8,7 +8,7 @@ CREATE TABLE tim_medis (
 );
 
 INSERT INTO tim_medis (kode_tim, nama_tim) VALUES 
-('P', 'Medical Center Pangkep'),
+('P', 'Semen Tonasa Medical Center'),
 ('M', 'PMI Makassar');
 
 -- 2. Table admin
@@ -34,7 +34,7 @@ CREATE TABLE antrian (
 );
 
 -- Buat fungsi untuk auto-increment nomor antrian berdasarkan hari ini dan tim
-CREATE OR REPLACE FUNCTION get_next_antrian(p_kode_tim CHAR(1), p_nama VARCHAR, p_metode metode_input_type)
+CREATE OR REPLACE FUNCTION get_next_antrian(p_kode_tim TEXT, p_nama TEXT, p_metode TEXT)
 RETURNS antrian
 LANGUAGE plpgsql
 AS $$
@@ -45,12 +45,12 @@ BEGIN
     -- Hitung max nomor hari ini untuk tim tersebut
     SELECT COALESCE(MAX(nomor_urut), 0) + 1 INTO v_next_nomor
     FROM antrian
-    WHERE kode_tim = p_kode_tim
+    WHERE kode_tim = CAST(p_kode_tim AS CHAR(1))
       AND DATE(waktu_ambil) = CURRENT_DATE;
 
     -- Insert baris baru
     INSERT INTO antrian (kode_tim, nomor_urut, nama_pendonor, metode_input)
-    VALUES (p_kode_tim, v_next_nomor, p_nama, p_metode)
+    VALUES (CAST(p_kode_tim AS CHAR(1)), v_next_nomor, p_nama, CAST(p_metode AS metode_input_type))
     RETURNING * INTO v_result;
 
     RETURN v_result;

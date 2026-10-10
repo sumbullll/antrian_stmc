@@ -12,12 +12,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const regSection = document.getElementById('registration-section');
     const ticketSection = document.getElementById('ticket-section');
 
-    // Cek parameter dari QR Code
+    // Cek parameter dari QR Code (Opsional, agar bisa auto-select jika pakai QR)
     if (timParam === 'P' || timParam === 'M') {
         selectTim.value = timParam;
-        btnDaftar.disabled = false;
-    } else {
-        errorJalur.classList.remove('d-none');
     }
 
     let currentMyQueue = null;
@@ -32,7 +29,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         try {
             // Gunakan RPC untuk mencegah bentrok nomor antrian
-            const { data, error } = await supabase.rpc('get_next_antrian', {
+            const { data, error } = await supabaseClient.rpc('get_next_antrian', {
                 p_kode_tim: tim,
                 p_nama: nama,
                 p_metode: 'QR'
@@ -56,9 +53,19 @@ document.addEventListener('DOMContentLoaded', () => {
         regSection.classList.add('d-none');
         ticketSection.classList.remove('d-none');
 
-        document.getElementById('nomor-antrian-display').innerText = `${queueData.kode_tim}-${queueData.nomor_urut}`;
-        document.getElementById('jalur-display').innerText = queueData.kode_tim === 'P' ? 'Medical Center Pangkep' : 'PMI Makassar';
+        const queueNumber = `${queueData.kode_tim}-${String(queueData.nomor_urut).padStart(3, '0')}`;
+        document.getElementById('nomor-antrian-display').innerText = queueNumber;
+        document.getElementById('jalur-display').innerText = queueData.kode_tim === 'P' ? 'Semen Tonasa Medical Center' : 'PMI Makassar';
         document.getElementById('nama-display').innerText = queueData.nama_pendonor;
+
+        // Generate Digital Barcode
+        JsBarcode("#barcode-canvas", queueNumber, {
+            format: "CODE128",
+            lineColor: "#333",
+            width: 3,
+            height: 60,
+            displayValue: true
+        });
     }
 
     function subscribeToCurrentServing(tim) {
@@ -72,7 +79,7 @@ document.addEventListener('DOMContentLoaded', () => {
         try {
             // Cari antrian dengan status 'dipanggil' hari ini untuk tim ini
             const today = new Date().toISOString().split('T')[0];
-            const { data, error } = await supabase
+            const { data, error } = await supabaseClient
                 .from('antrian')
                 .select('nomor_urut')
                 .eq('kode_tim', tim)
@@ -82,7 +89,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 .limit(1);
 
             if (data && data.length > 0) {
-                document.getElementById('current-serving-display').innerText = `${tim}-${data[0].nomor_urut}`;
+                document.getElementById('current-serving-display').innerText = `${tim}-${String(data[0].nomor_urut).padStart(3, '0')}`;
             } else {
                 document.getElementById('current-serving-display').innerText = '--';
             }
