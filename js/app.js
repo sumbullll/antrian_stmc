@@ -32,7 +32,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data, error } = await supabaseClient.rpc('get_next_antrian', {
                 p_kode_tim: tim,
                 p_nama: nama,
-                p_metode: 'QR Code'
+                p_metode: 'QR'
             });
 
             if (error) throw error;
