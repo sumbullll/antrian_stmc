@@ -22,7 +22,27 @@
                         <h5 class="card-title mb-3">Silakan Masukkan Nama Anda</h5>
                         <form id="form-daftar">
                             <div class="mb-3">
-                                <input type="text" id="nama_pendonor" class="form-control form-control-lg text-center" placeholder="Nama Panggilan" required>
+                                <input type="text" id="nomor_id" class="form-control form-control-lg text-center" placeholder="NRP / NIK Karyawan" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="text" id="nama_pendonor" class="form-control form-control-lg text-center" placeholder="Nama Lengkap" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="text" id="unit_kerja" class="form-control form-control-lg text-center" placeholder="Unit Kerja / Departemen" required>
+                            </div>
+                            <div class="mb-3">
+                                <input type="tel" id="no_hp" class="form-control form-control-lg text-center" placeholder="No. WhatsApp" required>
+                            </div>
+                            <div class="mb-3 text-start">
+                                <label class="form-label text-muted small">Golongan Darah:</label>
+                                <select id="gol_darah" class="form-select form-select-lg" required>
+                                    <option value="" disabled selected>Pilih...</option>
+                                    <option value="A">A</option>
+                                    <option value="B">B</option>
+                                    <option value="AB">AB</option>
+                                    <option value="O">O</option>
+                                    <option value="Belum Tahu">Belum Tahu</option>
+                                </select>
                             </div>
                             <div class="mb-3 text-start">
                                 <label class="form-label text-muted small">Pilih Jalur Antrian:</label>

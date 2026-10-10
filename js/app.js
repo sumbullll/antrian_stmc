@@ -22,6 +22,10 @@ document.addEventListener('DOMContentLoaded', () => {
     formDaftar.addEventListener('submit', async (e) => {
         e.preventDefault();
         const nama = document.getElementById('nama_pendonor').value;
+        const nomor_id = document.getElementById('nomor_id').value;
+        const unit_kerja = document.getElementById('unit_kerja').value;
+        const no_hp = document.getElementById('no_hp').value;
+        const gol_darah = document.getElementById('gol_darah').value;
         const tim = selectTim.value;
 
         btnDaftar.disabled = true;
@@ -32,7 +36,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data, error } = await supabaseClient.rpc('get_next_antrian', {
                 p_kode_tim: tim,
                 p_nama: nama,
-                p_metode: 'QR'
+                p_metode: 'QR',
+                p_nomor_id: nomor_id,
+                p_unit_kerja: unit_kerja,
+                p_no_hp: no_hp,
+                p_gol_darah: gol_darah
             });
 
             if (error) throw error;

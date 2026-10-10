@@ -206,7 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const { error } = await supabaseClient.rpc('get_next_antrian', {
                 p_kode_tim: currentTim,
                 p_nama: nama,
-                p_metode: 'Manual'
+                p_metode: 'Manual',
+                p_nomor_id: '-',
+                p_unit_kerja: '-',
+                p_no_hp: '-',
+                p_gol_darah: '-'
             });
             
             if (error) throw error;
@@ -245,21 +249,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Siapkan header CSV
             let csvContent = "data:text/csv;charset=utf-8,";
-            csvContent += "ID Antrian,Tim,Nomor Urut,Nama Pendonor,Metode Input,Status,Waktu Ambil,Waktu Panggil\n";
+            csvContent += "ID Antrian,Tim,Nomor Urut,NRP/NIK,Nama Pendonor,Unit Kerja,No HP,Gol Darah,Metode Input,Status,Waktu Ambil,Waktu Panggil\n";
 
             // Isi baris data
             data.forEach(row => {
                 const id = row.id_antrian;
                 const tim = row.kode_tim === 'P' ? 'Semen Tonasa Medical Center' : 'PMI Makassar';
                 const nomor = `${row.kode_tim}-${String(row.nomor_urut).padStart(3, '0')}`;
-                // Bungkus teks dengan kutipan agar aman dari koma di dalam nama
+                
+                // Bungkus teks dengan kutipan agar aman dari koma di dalam teks
+                const nik = `"${row.nomor_id || '-'}"`;
                 const nama = `"${row.nama_pendonor}"`;
+                const unit = `"${row.unit_kerja || '-'}"`;
+                const hp = `"${row.no_hp || '-'}"`;
+                const gol = `"${row.gol_darah || '-'}"`;
+                
                 const metode = row.metode_input;
                 const status = row.status;
                 const wAmbil = new Date(row.waktu_ambil).toLocaleString('id-ID');
                 const wPanggil = row.waktu_panggil ? new Date(row.waktu_panggil).toLocaleString('id-ID') : '-';
 
-                csvContent += `${id},"${tim}",${nomor},${nama},${metode},${status},"${wAmbil}","${wPanggil}"\n`;
+                csvContent += `${id},"${tim}",${nomor},${nik},${nama},${unit},${hp},${gol},${metode},${status},"${wAmbil}","${wPanggil}"\n`;
             });
 
             // Lakukan download otomatis
