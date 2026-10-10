@@ -82,12 +82,9 @@
                         <h6 class="card-title mb-0">Input Manual Darurat</h6>
                     </div>
                     <div class="card-body">
-                        <form id="form-manual">
-                            <div class="input-group">
-                                <input type="text" id="manual_nama" class="form-control" placeholder="Nama Pendonor" required>
-                                <button class="btn btn-outline-secondary" type="submit">Tambah ke Antrian</button>
-                            </div>
-                        </form>
+                        <button type="button" class="btn btn-outline-secondary w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#manualModal">
+                            + Tambah Peserta Manual
+                        </button>
                     </div>
                 </div>
 
@@ -108,6 +105,54 @@
         </div>
     </div>
 
+    <!-- Modal Input Manual -->
+    <div class="modal fade" id="manualModal" tabindex="-1" aria-labelledby="manualModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <form id="form-manual">
+                    <div class="modal-header bg-secondary text-white">
+                        <h5 class="modal-title" id="manualModalLabel">Tambah Antrian Manual</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">NRP / NIK</label>
+                            <input type="text" class="form-control" id="manual_nomor_id" placeholder="Opsional">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nama Pendonor</label>
+                            <input type="text" class="form-control" id="manual_nama" placeholder="Wajib Diisi" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Unit Kerja / Departemen</label>
+                            <input type="text" class="form-control" id="manual_unit_kerja" placeholder="Opsional">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nomor WhatsApp</label>
+                            <input type="tel" class="form-control" id="manual_no_hp" placeholder="Opsional">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Golongan Darah</label>
+                            <select class="form-select" id="manual_gol_darah">
+                                <option value="-">Pilih...</option>
+                                <option value="A">A</option>
+                                <option value="B">B</option>
+                                <option value="AB">AB</option>
+                                <option value="O">O</option>
+                                <option value="Belum Tahu">Belum Tahu</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-secondary" id="btn-submit-manual">Tambah ke Antrian</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
     <script src="js/admin.js"></script>

@@ -199,29 +199,43 @@ document.addEventListener('DOMContentLoaded', () => {
     formManual.addEventListener('submit', async (e) => {
         e.preventDefault();
         const nama = document.getElementById('manual_nama').value;
-        const btnSubmit = formManual.querySelector('button');
+        const nomor_id = document.getElementById('manual_nomor_id').value || '-';
+        const unit_kerja = document.getElementById('manual_unit_kerja').value || '-';
+        const no_hp = document.getElementById('manual_no_hp').value || '-';
+        const gol_darah = document.getElementById('manual_gol_darah').value;
+
+        const btnSubmit = document.getElementById('btn-submit-manual');
         btnSubmit.disabled = true;
+        btnSubmit.innerText = 'Menambahkan...';
 
         try {
             const { error } = await supabaseClient.rpc('get_next_antrian', {
                 p_kode_tim: currentTim,
                 p_nama: nama,
                 p_metode: 'Manual',
-                p_nomor_id: '-',
-                p_unit_kerja: '-',
-                p_no_hp: '-',
-                p_gol_darah: '-'
+                p_nomor_id: nomor_id,
+                p_unit_kerja: unit_kerja,
+                p_no_hp: no_hp,
+                p_gol_darah: gol_darah
             });
             
             if (error) throw error;
 
-            document.getElementById('manual_nama').value = '';
+            formManual.reset();
             fetchQueue();
+            
+            // Tutup modal secara otomatis
+            const manualModalElement = document.getElementById('manualModal');
+            const manualModal = bootstrap.Modal.getInstance(manualModalElement);
+            if (manualModal) {
+                manualModal.hide();
+            }
         } catch (err) {
             console.error(err);
             alert('Gagal menambah antrian manual.');
         } finally {
             btnSubmit.disabled = false;
+            btnSubmit.innerText = 'Tambah ke Antrian';
         }
     });
 
