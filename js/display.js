@@ -24,7 +24,7 @@ window.setDisplay = function(tim) {
     
     if (tim === 'P') {
         header.classList.add('theme-pangkep');
-        title.innerText = 'Semen Tonasa Medical Center (P)';
+        title.innerText = 'UTD Pangkep (P)';
     } else {
         header.classList.add('theme-makassar');
         title.innerText = 'PMI Makassar (M)';
@@ -200,8 +200,16 @@ async function speakAnnouncement(item) {
     // Putar bel Ting-Tong terlebih dahulu
     await playChime();
 
-    const timName = item.kode_tim === 'P' ? 'Semen Tonasa Medical Center' : 'PMI Makassar';
-    const text = `Nomor antrian, ${item.kode_tim}, ${String(item.nomor_urut).padStart(3, '0')}, atas nama ${item.nama_pendonor}, silakan menuju tim ${timName}.`;
+    const timName = item.kode_tim === 'P' ? 'UTD Pangkep' : 'PMI Makassar';
+    const nomorTeks = `${item.kode_tim}, ${String(item.nomor_urut).padStart(3, '0')}`;
+    
+    let text = '';
+    const nama = (item.nama_pendonor || '').trim();
+    if (nama && nama !== '-' && !nama.toLowerCase().startsWith('peserta ')) {
+        text = `Nomor antrian, ${nomorTeks}, atas nama ${nama}, silakan menuju ${timName}.`;
+    } else {
+        text = `Nomor antrian, ${nomorTeks}, silakan menuju ${timName}.`;
+    }
 
     const msg = new SpeechSynthesisUtterance(text);
     msg.lang = 'id-ID';

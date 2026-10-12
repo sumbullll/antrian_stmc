@@ -18,8 +18,8 @@
                 </button>
                 <span class="me-3">Tim Bertugas: <strong id="admin-tim-display">--</strong></span>
                 <select id="login-tim" class="form-select form-select-sm" style="width: auto;">
-                    <option value="P">Pangkep (P)</option>
-                    <option value="M">Makassar (M)</option>
+                    <option value="P">UTD Pangkep (P)</option>
+                    <option value="M">PMI Makassar (M)</option>
                 </select>
             </div>
         </div>
@@ -55,48 +55,75 @@
         </div>
 
         <div class="row">
-            <!-- Left Column: Current Serving & Actions -->
+            <!-- Left Column: Kontrol Pemanggil Antrian (Ruang Donor / TV) -->
             <div class="col-md-7 mb-4">
                 <div class="card shadow-sm h-100 border-primary">
                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
                         <h5 class="card-title mb-0">Sedang Dilayani (Aktif)</h5>
                         <span class="badge bg-light text-primary rounded-pill" id="active-count-badge">0</span>
                     </div>
-                    <div class="card-body bg-light p-3" id="active-queue-container" style="max-height: 500px; overflow-y: auto;">
+                    <div class="card-body bg-light p-3" id="active-queue-container" style="max-height: 450px; overflow-y: auto;">
                         <div class="text-center text-muted py-5" id="no-active-msg">
                             <h4 class="fw-light">Belum ada pasien aktif</h4>
                             <small>Klik "Panggil Selanjutnya" untuk memulai</small>
                         </div>
                     </div>
-                    <div class="card-footer bg-white border-top pb-3 pt-3 px-4 text-center">
-                        <button id="btn-panggil-selanjutnya" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow-sm" disabled>📢 Panggil Selanjutnya</button>
+                    <div class="card-footer bg-white border-top p-3">
+                        <button id="btn-panggil-selanjutnya" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow-sm mb-3" disabled>
+                            📢 Panggil Selanjutnya (+)
+                        </button>
+                        <div class="row g-2">
+                            <div class="col-sm-5">
+                                <button id="btn-mundur" class="btn btn-outline-secondary w-100 py-2 fw-semibold">
+                                    ⏪ Mundur (-)
+                                </button>
+                            </div>
+                            <div class="col-sm-7">
+                                <form id="form-lompat" class="d-flex">
+                                    <input type="number" id="input-lompat-nomor" class="form-control me-2" placeholder="No. misal: 15" min="1" max="999" required>
+                                    <button type="submit" class="btn btn-outline-primary text-nowrap fw-semibold">🎯 Panggil</button>
+                                </form>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Right Column: Queue List & Manual Input -->
+            <!-- Right Column: Registrasi Meja Depan & Daftar Antrian -->
             <div class="col-md-5 mb-4">
-                <!-- Manual Input -->
-                <div class="card shadow-sm mb-4">
-                    <div class="card-header bg-secondary text-white">
-                        <h6 class="card-title mb-0">Input Manual Darurat</h6>
+                <!-- Registrasi Cepat Meja Depan -->
+                <div class="card shadow-sm mb-4 border-success">
+                    <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
+                        <h6 class="card-title mb-0 fw-bold">Registrasi Kertas Antrian</h6>
+                        <span class="badge bg-white text-success fw-bold" id="badge-next-ticket">Nomor: ...</span>
                     </div>
                     <div class="card-body">
-                        <button type="button" class="btn btn-outline-secondary w-100 fw-bold" data-bs-toggle="modal" data-bs-target="#manualModal">
-                            + Tambah Peserta Manual
-                        </button>
+                        <form id="form-quick-reg">
+                            <div class="input-group mb-2">
+                                <input type="text" id="quick-nama" class="form-control form-control-lg" placeholder="Ketik nama pendonor..." autofocus>
+                                <button class="btn btn-success fw-bold" type="submit">+ Simpan</button>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <small class="text-muted fst-italic">Tekan Enter untuk simpan cepat</small>
+                                <a href="#" class="small text-decoration-none text-muted" data-bs-toggle="modal" data-bs-target="#manualModal">
+                                    + Data Lengkap (NIK/HP)
+                                </a>
+                            </div>
+                        </form>
                     </div>
                 </div>
 
-                <!-- Queue List -->
+                <!-- Daftar Antrian Hari Ini -->
                 <div class="card shadow-sm">
                     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0">Daftar Menunggu</h6>
+                        <h6 class="card-title mb-0">Daftar Antrian Hari Ini</h6>
                         <span class="badge bg-light text-dark" id="admin-queue-count">0</span>
                     </div>
-                    <div class="card-body p-0">
+                    <div class="p-2 border-bottom bg-light">
+                        <input type="text" id="input-search-queue" class="form-control form-control-sm" placeholder="🔍 Cari nomor atau nama...">
+                    </div>
+                    <div class="card-body p-0" style="max-height: 380px; overflow-y: auto;">
                         <ul class="list-group list-group-flush" id="admin-queue-list">
-                            <!-- List items will be populated by JS -->
                             <li class="list-group-item text-center text-muted">Belum ada antrian.</li>
                         </ul>
                     </div>
