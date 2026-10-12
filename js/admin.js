@@ -13,6 +13,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputLompat = document.getElementById('input-lompat-nomor');
 
     const formQuickReg = document.getElementById('form-quick-reg');
+    const inputQuickNomor = document.getElementById('quick-nomor');
+    const labelTimPrefix = document.getElementById('label-tim-prefix');
     const inputQuickNama = document.getElementById('quick-nama');
     const inputSearchQueue = document.getElementById('input-search-queue');
     const formManual = document.getElementById('form-manual');
@@ -36,6 +38,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function updateTimDisplay() {
         displayTim.innerText = currentTim === 'P' ? 'UTD Pangkep' : 'PMI Makassar';
+        if (labelTimPrefix) {
+            labelTimPrefix.innerText = currentTim + '-';
+        }
+    }
+
+    // Helper: Mencari nomor urut terkecil yang belum pernah terpakai hari ini (mengisi gap secara berurutan)
+    function getNextSequentialNumber(queues) {
+        const existingNumbers = new Set(queues.map(q => q.nomor_urut));
+        let n = 1;
+        while (existingNumbers.has(n)) {
+            n++;
+        }
+        return n;
     }
 
     // Polling data berkala setiap 2.5 detik
@@ -76,10 +91,13 @@ document.addEventListener('DOMContentLoaded', () => {
             document.getElementById('stat-selesai').innerText = sudahSelesai;
             document.getElementById('stat-sisa').innerText = sisaAntrian;
 
-            // Update Badge Nomor Kertas Berikutnya
-            const maxNum = data.length > 0 ? Math.max(...data.map(d => d.nomor_urut)) : 0;
+            // Update Badge & Input Nomor Kertas Berikutnya secara berurutan
+            const nextSeq = getNextSequentialNumber(data);
             if (badgeNextTicket) {
-                badgeNextTicket.innerText = `Berikutnya: ${currentTim}-${String(maxNum + 1).padStart(3, '0')}`;
+                badgeNextTicket.innerText = `Berikutnya: ${currentTim}-${String(nextSeq).padStart(3, '0')}`;
+            }
+            if (inputQuickNomor && document.activeElement !== inputQuickNomor) {
+                inputQuickNomor.value = nextSeq;
             }
 
             // Status tombol Panggil Selanjutnya
@@ -142,6 +160,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     <button class="btn btn-sm btn-outline-primary btn-call-direct" data-id="${item.id_antrian}" data-nomor="${nomorDisplay}" title="Panggil Langsung">
                         📢
                     </button>
+                    <button class="btn btn-sm btn-outline-danger btn-delete-queue" data-id="${item.id_antrian}" data-nomor="${nomorDisplay}" title="Hapus Antrian">
+                        🗑️
+                    </button>
                 </div>
             `;
             queueList.appendChild(li);
@@ -181,6 +202,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     .eq('id_antrian', id);
                 fetchQueue();
                 fetchActive();
+            });
+        });
+
+        // Event listener Hapus Antrian
+        document.querySelectorAll('.btn-delete-queue').forEach(btn => {
+            btn.addEventListener('click', async (e) => {
+                const button = e.currentTarget;
+                const id = button.getAttribute('data-id');
+                const nomor = button.getAttribute('data-nomor');
+                if (confirm(`Yakin ingin menghapus antrian ${nomor}? Data akan dihapus dari antrian hari ini.`)) {
+                    const { error } = await supabaseClient.from('antrian').delete().eq('id_antrian', id);
+                    if (error) {
+                        alert('Gagal menghapus antrian: ' + error.message);
+                    }
+                    fetchQueue();
+                    fetchActive();
+                }
             });
         });
     }
@@ -373,9 +411,17 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSubmit.disabled = true;
 
             try {
-                // Hitung nomor urut berikutnya berdasarkan antrian hari ini
-                const maxNum = cachedAllQueues.length > 0 ? Math.max(...cachedAllQueues.map(d => d.nomor_urut)) : 0;
-                const nextNum = maxNum + 1;
+                // Ambil nomor yang tertera di kotak nomor, atau cari nomor urut terendah berikutnya
+                const customNum = inputQuickNomor ? parseInt(inputQuickNomor.value) : null;
+                const nextNum = (customNum && customNum > 0) ? customNum : getNextSequentialNumber(cachedAllQueues);
+
+                // Cek apakah nomor ini sudah ada di antrian hari ini
+                const exists = cachedAllQueues.some(q => q.nomor_urut === nextNum);
+                if (exists) {
+                    alert(`Nomor ${currentTim}-${String(nextNum).padStart(3, '0')} sudah ada di antrian! Silakan pilih nomor lain atau edit namanya di daftar antrian.`);
+                    btnSubmit.disabled = false;
+                    return;
+                }
 
                 const { error } = await supabaseClient
                     .from('antrian')

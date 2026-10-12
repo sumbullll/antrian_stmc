@@ -100,11 +100,13 @@
                     <div class="card-body">
                         <form id="form-quick-reg">
                             <div class="input-group mb-2">
+                                <span class="input-group-text bg-light fw-bold text-success" id="label-tim-prefix">M-</span>
+                                <input type="number" id="quick-nomor" class="form-control form-control-lg fw-bold text-center" style="max-width: 90px;" min="1" max="999" title="Nomor Kertas Fisik" required>
                                 <input type="text" id="quick-nama" class="form-control form-control-lg" placeholder="Ketik nama pendonor..." autofocus>
-                                <button class="btn btn-success fw-bold" type="submit">+ Simpan</button>
+                                <button class="btn btn-success fw-bold text-nowrap" type="submit">+ Simpan</button>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted fst-italic">Tekan Enter untuk simpan cepat</small>
+                                <small class="text-muted fst-italic">Nomor otomatis urut, bisa diedit jika perlu</small>
                                 <a href="#" class="small text-decoration-none text-muted" data-bs-toggle="modal" data-bs-target="#manualModal">
                                     + Data Lengkap (NIK/HP)
                                 </a>
