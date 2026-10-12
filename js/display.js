@@ -95,24 +95,27 @@ async function fetchCurrentDisplay() {
             }
         }
         
-        // Update Vertical Marquee (Daftar Menunggu)
+        // Update Daftar Menunggu (Render ke Container Auto-Scroll)
         if (resTunggu.data) {
-            const waitingListMarquee = document.getElementById('tv-waiting-list');
-            let listHTML = '';
-            if (resTunggu.data.length > 0) {
-                listHTML = resTunggu.data.map(q => {
-                    const nama = q.nama_pendonor && q.nama_pendonor !== '-' ? `<br><small class="text-muted">${q.nama_pendonor}</small>` : '';
-                    return `<div class="py-3 border-bottom border-light">${displayTim}-${String(q.nomor_urut).padStart(3, '0')}${nama}</div>`;
-                }).join('');
-            } else {
-                listHTML = `<div class="py-5 text-muted fw-normal">Belum ada antrian...</div>`;
-            }
+            const waitingListEl = document.getElementById('tv-waiting-list');
+            if (waitingListEl) {
+                let listHTML = '';
+                if (resTunggu.data.length > 0) {
+                    listHTML = resTunggu.data.map(q => {
+                        const nama = (q.nama_pendonor && q.nama_pendonor !== '-') ? `<div class="fs-6 text-muted fw-normal">${q.nama_pendonor}</div>` : '';
+                        return `<div class="py-3 border-bottom border-light">
+                            <span class="fs-3 fw-bolder text-primary">${displayTim}-${String(q.nomor_urut).padStart(3, '0')}</span>
+                            ${nama}
+                        </div>`;
+                    }).join('');
+                } else {
+                    listHTML = `<div class="py-5 text-muted fw-normal">Belum ada antrian...</div>`;
+                }
 
-            // PENTING: Hanya perbarui innerHTML jika isi antrian benar-benar berubah!
-            // Ini mencegah animasi marquee ter-reset ke bawah setiap 2 detik!
-            if (listHTML !== lastWaitingHTML) {
-                lastWaitingHTML = listHTML;
-                waitingListMarquee.innerHTML = listHTML;
+                if (listHTML !== lastWaitingHTML) {
+                    lastWaitingHTML = listHTML;
+                    waitingListEl.innerHTML = listHTML;
+                }
             }
         }
     } catch (err) {
@@ -120,14 +123,26 @@ async function fetchCurrentDisplay() {
     }
 }
 
+// Auto-Scroll Halus untuk Daftar Menunggu (Tidak pernah blank, tidak ter-reset)
+setInterval(() => {
+    const scrollBox = document.getElementById('waiting-scroll-container');
+    if (scrollBox && scrollBox.scrollHeight > scrollBox.clientHeight) {
+        scrollBox.scrollTop += 1;
+        if (scrollBox.scrollTop >= scrollBox.scrollHeight - scrollBox.clientHeight) {
+            scrollBox.scrollTop = 0; // Ulangi ke paling atas
+        }
+    }
+}, 45);
+
 function updateUI(items) {
     const grid = document.getElementById('tv-active-grid');
+    if (!grid) return;
 
     if (!items || items.length === 0) {
         grid.innerHTML = `
-            <div class="col-12 text-muted">
-                <h1 class="display-1 fw-bold mt-5">--</h1>
-                <h3 class="name-box">Silakan Menunggu</h3>
+            <div class="col-12 text-muted my-auto">
+                <h1 class="display-1 fw-bold text-secondary">--</h1>
+                <h3 class="name-box text-muted">Silakan Menunggu</h3>
             </div>`;
         return;
     }
@@ -136,22 +151,24 @@ function updateUI(items) {
 
     // Batasi maksimal 4 antrian aktif di layar TV agar grid proporsional dan tidak terpotong
     const displayItems = items.slice(0, 4);
-    const colClass = displayItems.length > 1 ? 'col-md-6' : 'col-12';
+    const colClass = displayItems.length === 1 ? 'col-12' : 'col-6';
 
     displayItems.forEach((item, index) => {
         const isLatest = index === 0;
-        const boxClass = isLatest ? 'border-primary border-3 highlight-update' : 'border-light border-1';
-        const shadowClass = isLatest ? 'shadow-lg' : 'shadow-sm';
+        const borderStyle = isLatest ? 'border: 4px solid #0d6efd !important;' : 'border: 2px solid #cbd5e1;';
+        const shadowStyle = isLatest ? 'box-shadow: 0 10px 25px rgba(13,110,253,0.3) !important;' : 'box-shadow: 0 4px 6px rgba(0,0,0,0.06);';
         const nama = (item.nama_pendonor && item.nama_pendonor !== '-') ? item.nama_pendonor : 'Peserta Donor';
-        
+        const numFontSize = displayItems.length > 2 ? '5vw' : (displayItems.length === 2 ? '6.5vw' : '9.5vw');
+        const nameFontSize = displayItems.length > 2 ? '1.8vw' : (displayItems.length === 2 ? '2.2vw' : '3vw');
+
         const cardHTML = `
-            <div class="${colClass}">
-                <div class="card h-100 ${boxClass} ${shadowClass}">
-                    <div class="card-body py-4">
-                        <div style="font-size: ${displayItems.length > 2 ? '5vw' : '8vw'}; font-weight: 900; line-height: 1; color: #212529;">
+            <div class="${colClass} p-2 my-auto">
+                <div class="card bg-white" style="${borderStyle} ${shadowStyle} border-radius: 18px;">
+                    <div class="card-body py-4 px-2 d-flex flex-column justify-content-center align-items-center">
+                        <div style="font-size: ${numFontSize}; font-weight: 900; line-height: 1; color: #0f172a;">
                             ${item.kode_tim}-${String(item.nomor_urut).padStart(3, '0')}
                         </div>
-                        <div style="font-size: ${displayItems.length > 2 ? '1.8vw' : '2.5vw'}; color: #6c757d; margin-top: 15px;">
+                        <div style="font-size: ${nameFontSize}; font-weight: 600; color: #475569; margin-top: 15px; word-break: break-word;">
                             ${nama}
                         </div>
                     </div>
