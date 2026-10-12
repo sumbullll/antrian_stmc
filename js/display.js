@@ -71,7 +71,7 @@ async function fetchCurrentDisplay() {
             .order('waktu_panggil', { ascending: false })
             .limit(4);
             
-        // Fetch antrian yang sedang menunggu (ambil 50 antrian berikutnya agar marquee ringan dan lancar)
+        // Fetch antrian yang sedang menunggu (ambil hingga 1000 antrian agar semua kuota tercakup penuh)
         const tungguPromise = supabaseClient
             .from('antrian')
             .select('nomor_urut, nama_pendonor')
@@ -79,7 +79,7 @@ async function fetchCurrentDisplay() {
             .eq('status', 'menunggu')
             .gte('waktu_ambil', startIso)
             .order('nomor_urut', { ascending: true })
-            .limit(50);
+            .limit(1000);
 
         const [resPanggil, resTunggu] = await Promise.all([panggilPromise, tungguPromise]);
 
@@ -126,13 +126,20 @@ async function fetchCurrentDisplay() {
     }
 }
 
-// Auto-Scroll Halus untuk Daftar Menunggu (Tidak pernah blank, tidak ter-reset)
+// Auto-Scroll Halus untuk Daftar Menunggu (Mencakup ratusan antrian secara penuh)
+let isPausedAtBottom = false;
 setInterval(() => {
     const scrollBox = document.getElementById('waiting-scroll-container');
-    if (scrollBox && scrollBox.scrollHeight > scrollBox.clientHeight) {
+    if (scrollBox && scrollBox.scrollHeight > scrollBox.clientHeight && !isPausedAtBottom) {
         scrollBox.scrollTop += 1;
-        if (scrollBox.scrollTop >= scrollBox.scrollHeight - scrollBox.clientHeight) {
-            scrollBox.scrollTop = 0; // Ulangi ke paling atas
+        // Jika sudah mencapai paling bawah antrian
+        if (scrollBox.scrollTop >= scrollBox.scrollHeight - scrollBox.clientHeight - 2) {
+            isPausedAtBottom = true;
+            // Beri jeda 2.5 detik agar nomor paling akhir sempat terbaca jelas
+            setTimeout(() => {
+                scrollBox.scrollTop = 0;
+                isPausedAtBottom = false;
+            }, 2500);
         }
     }
 }, 45);
