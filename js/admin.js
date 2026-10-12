@@ -373,15 +373,23 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSubmit.disabled = true;
 
             try {
-                const { error } = await supabaseClient.rpc('get_next_antrian', {
-                    p_kode_tim: currentTim,
-                    p_nama: nama,
-                    p_metode: 'Manual',
-                    p_nomor_id: '-',
-                    p_unit_kerja: '-',
-                    p_no_hp: '-',
-                    p_gol_darah: '-'
-                });
+                // Hitung nomor urut berikutnya berdasarkan antrian hari ini
+                const maxNum = cachedAllQueues.length > 0 ? Math.max(...cachedAllQueues.map(d => d.nomor_urut)) : 0;
+                const nextNum = maxNum + 1;
+
+                const { error } = await supabaseClient
+                    .from('antrian')
+                    .insert({
+                        kode_tim: currentTim,
+                        nomor_urut: nextNum,
+                        nama_pendonor: nama,
+                        metode_input: 'Manual',
+                        status: 'menunggu',
+                        nomor_id: '-',
+                        unit_kerja: '-',
+                        no_hp: '-',
+                        gol_darah: '-'
+                    });
 
                 if (error) throw error;
 
@@ -390,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 fetchQueue();
             } catch (err) {
                 console.error(err);
-                alert('Gagal meregistrasi antrian.');
+                alert('Gagal meregistrasi antrian: ' + (err.message || JSON.stringify(err)));
             } finally {
                 btnSubmit.disabled = false;
             }
@@ -412,15 +420,22 @@ document.addEventListener('DOMContentLoaded', () => {
             btnSubmit.innerText = 'Menambahkan...';
 
             try {
-                const { error } = await supabaseClient.rpc('get_next_antrian', {
-                    p_kode_tim: currentTim,
-                    p_nama: nama,
-                    p_metode: 'Manual',
-                    p_nomor_id: nomor_id,
-                    p_unit_kerja: unit_kerja,
-                    p_no_hp: no_hp,
-                    p_gol_darah: gol_darah
-                });
+                const maxNum = cachedAllQueues.length > 0 ? Math.max(...cachedAllQueues.map(d => d.nomor_urut)) : 0;
+                const nextNum = maxNum + 1;
+
+                const { error } = await supabaseClient
+                    .from('antrian')
+                    .insert({
+                        kode_tim: currentTim,
+                        nomor_urut: nextNum,
+                        nama_pendonor: nama,
+                        metode_input: 'Manual',
+                        status: 'menunggu',
+                        nomor_id: nomor_id,
+                        unit_kerja: unit_kerja,
+                        no_hp: no_hp,
+                        gol_darah: gol_darah
+                    });
                 
                 if (error) throw error;
 
@@ -432,7 +447,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (manualModal) manualModal.hide();
             } catch (err) {
                 console.error(err);
-                alert('Gagal menambah antrian.');
+                alert('Gagal menambah antrian: ' + (err.message || JSON.stringify(err)));
             } finally {
                 btnSubmit.disabled = false;
                 btnSubmit.innerText = 'Tambah ke Antrian';
