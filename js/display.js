@@ -100,11 +100,14 @@ async function fetchCurrentDisplay() {
             const waitingListEl = document.getElementById('tv-waiting-list');
             if (waitingListEl) {
                 let listHTML = '';
+                // Warna khusus: Orange untuk Pangkep, Merah untuk Makassar
+                const queueColor = displayTim === 'P' ? '#fd7e14' : '#dc3545';
+
                 if (resTunggu.data.length > 0) {
                     listHTML = resTunggu.data.map(q => {
                         const nama = (q.nama_pendonor && q.nama_pendonor !== '-') ? `<div class="fs-6 text-muted fw-normal">${q.nama_pendonor}</div>` : '';
                         return `<div class="py-3 border-bottom border-light">
-                            <span class="fs-3 fw-bolder text-primary">${displayTim}-${String(q.nomor_urut).padStart(3, '0')}</span>
+                            <span class="fs-3 fw-bolder" style="color: ${queueColor}; letter-spacing: 0.5px;">${displayTim}-${String(q.nomor_urut).padStart(3, '0')}</span>
                             ${nama}
                         </div>`;
                     }).join('');
@@ -152,11 +155,13 @@ function updateUI(items) {
     // Batasi maksimal 4 antrian aktif di layar TV agar grid proporsional dan tidak terpotong
     const displayItems = items.slice(0, 4);
     const colClass = displayItems.length === 1 ? 'col-12' : 'col-6';
+    const themeColor = displayTim === 'P' ? '#fd7e14' : '#dc3545';
+    const themeShadow = displayTim === 'P' ? 'rgba(253,126,20,0.35)' : 'rgba(220,53,69,0.35)';
 
     displayItems.forEach((item, index) => {
         const isLatest = index === 0;
-        const borderStyle = isLatest ? 'border: 4px solid #0d6efd !important;' : 'border: 2px solid #cbd5e1;';
-        const shadowStyle = isLatest ? 'box-shadow: 0 10px 25px rgba(13,110,253,0.3) !important;' : 'box-shadow: 0 4px 6px rgba(0,0,0,0.06);';
+        const borderStyle = isLatest ? `border: 4px solid ${themeColor} !important;` : 'border: 2px solid #cbd5e1;';
+        const shadowStyle = isLatest ? `box-shadow: 0 10px 25px ${themeShadow} !important;` : 'box-shadow: 0 4px 6px rgba(0,0,0,0.06);';
         const nama = (item.nama_pendonor && item.nama_pendonor !== '-') ? item.nama_pendonor : 'Peserta Donor';
         const numFontSize = displayItems.length > 2 ? '5vw' : (displayItems.length === 2 ? '6.5vw' : '9.5vw');
         const nameFontSize = displayItems.length > 2 ? '1.8vw' : (displayItems.length === 2 ? '2.2vw' : '3vw');
