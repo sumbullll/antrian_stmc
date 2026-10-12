@@ -51,6 +51,8 @@ function initAudio() {
     }
 }
 
+let lastWaitingHTML = '';
+
 async function fetchCurrentDisplay() {
     if (!displayTim) return;
 
@@ -59,23 +61,25 @@ async function fetchCurrentDisplay() {
         startOfDay.setHours(0, 0, 0, 0);
         const startIso = startOfDay.toISOString();
         
-        // Fetch antrian yang sedang dipanggil (semua yang aktif)
+        // Fetch antrian yang sedang dipanggil (maksimal 4 di TV agar grid rapi dan tidak overflow)
         const panggilPromise = supabaseClient
             .from('antrian')
             .select('*')
             .eq('kode_tim', displayTim)
             .eq('status', 'dipanggil')
             .gte('waktu_ambil', startIso)
-            .order('waktu_panggil', { ascending: false });
+            .order('waktu_panggil', { ascending: false })
+            .limit(4);
             
-        // Fetch antrian yang sedang menunggu
+        // Fetch antrian yang sedang menunggu (ambil 50 antrian berikutnya agar marquee ringan dan lancar)
         const tungguPromise = supabaseClient
             .from('antrian')
             .select('nomor_urut, nama_pendonor')
             .eq('kode_tim', displayTim)
             .eq('status', 'menunggu')
             .gte('waktu_ambil', startIso)
-            .order('nomor_urut', { ascending: true });
+            .order('nomor_urut', { ascending: true })
+            .limit(50);
 
         const [resPanggil, resTunggu] = await Promise.all([panggilPromise, tungguPromise]);
 
@@ -94,11 +98,21 @@ async function fetchCurrentDisplay() {
         // Update Vertical Marquee (Daftar Menunggu)
         if (resTunggu.data) {
             const waitingListMarquee = document.getElementById('tv-waiting-list');
+            let listHTML = '';
             if (resTunggu.data.length > 0) {
-                const listHTML = resTunggu.data.map(q => `<div class="py-3 border-bottom border-light">${displayTim}-${String(q.nomor_urut).padStart(3, '0')}<br><small class="text-muted">${q.nama_pendonor}</small></div>`).join('');
-                waitingListMarquee.innerHTML = listHTML;
+                listHTML = resTunggu.data.map(q => {
+                    const nama = q.nama_pendonor && q.nama_pendonor !== '-' ? `<br><small class="text-muted">${q.nama_pendonor}</small>` : '';
+                    return `<div class="py-3 border-bottom border-light">${displayTim}-${String(q.nomor_urut).padStart(3, '0')}${nama}</div>`;
+                }).join('');
             } else {
-                waitingListMarquee.innerHTML = `<div class="py-5 text-muted fw-normal">Belum ada antrian...</div>`;
+                listHTML = `<div class="py-5 text-muted fw-normal">Belum ada antrian...</div>`;
+            }
+
+            // PENTING: Hanya perbarui innerHTML jika isi antrian benar-benar berubah!
+            // Ini mencegah animasi marquee ter-reset ke bawah setiap 2 detik!
+            if (listHTML !== lastWaitingHTML) {
+                lastWaitingHTML = listHTML;
+                waitingListMarquee.innerHTML = listHTML;
             }
         }
     } catch (err) {
@@ -108,7 +122,6 @@ async function fetchCurrentDisplay() {
 
 function updateUI(items) {
     const grid = document.getElementById('tv-active-grid');
-    grid.innerHTML = ''; // Kosongkan grid
 
     if (!items || items.length === 0) {
         grid.innerHTML = `
@@ -119,24 +132,27 @@ function updateUI(items) {
         return;
     }
 
-    // Jika lebih dari 2 aktif, gunakan col-md-6 agar jadi 2 kolom (grid 2x2 dst)
-    // Jika hanya 1-2, bisa gunakan ukuran kolom dinamis
-    const colClass = items.length > 1 ? 'col-md-6' : 'col-12';
+    grid.innerHTML = ''; // Kosongkan grid
 
-    items.forEach((item, index) => {
-        const isLatest = index === 0; // Item pertama adalah yang paling baru dipanggil
+    // Batasi maksimal 4 antrian aktif di layar TV agar grid proporsional dan tidak terpotong
+    const displayItems = items.slice(0, 4);
+    const colClass = displayItems.length > 1 ? 'col-md-6' : 'col-12';
+
+    displayItems.forEach((item, index) => {
+        const isLatest = index === 0;
         const boxClass = isLatest ? 'border-primary border-3 highlight-update' : 'border-light border-1';
         const shadowClass = isLatest ? 'shadow-lg' : 'shadow-sm';
+        const nama = (item.nama_pendonor && item.nama_pendonor !== '-') ? item.nama_pendonor : 'Peserta Donor';
         
         const cardHTML = `
             <div class="${colClass}">
                 <div class="card h-100 ${boxClass} ${shadowClass}">
                     <div class="card-body py-4">
-                        <div style="font-size: ${items.length > 2 ? '6vw' : '10vw'}; font-weight: 900; line-height: 1; color: #212529;">
+                        <div style="font-size: ${displayItems.length > 2 ? '5vw' : '8vw'}; font-weight: 900; line-height: 1; color: #212529;">
                             ${item.kode_tim}-${String(item.nomor_urut).padStart(3, '0')}
                         </div>
-                        <div style="font-size: ${items.length > 2 ? '2vw' : '3vw'}; color: #6c757d; margin-top: 15px;">
-                            ${item.nama_pendonor}
+                        <div style="font-size: ${displayItems.length > 2 ? '1.8vw' : '2.5vw'}; color: #6c757d; margin-top: 15px;">
+                            ${nama}
                         </div>
                     </div>
                 </div>
