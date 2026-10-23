@@ -83,10 +83,11 @@ function initAudio() {
 window.setDisplay = function(tim) {
     displayTim = tim;
     
-    // Simpan pilihan ke LocalStorage agar reload tetap berada di layar yang sama
-    localStorage.setItem('displayTim', tim);
+    // Simpan pilihan ke sessionStorage (khusus tab ini saja, agar TV 1 dan TV 2 tidak saling menimpa)
+    sessionStorage.setItem('displayTim', tim);
+    localStorage.removeItem('displayTim'); // Bersihkan storage global lama
     
-    // Update parameter URL tanpa reload agar bisa dibookmark/dishare
+    // Update parameter URL agar saat halaman di-reload (F5) tetap berada di layar yang sama
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('tim', tim);
     window.history.replaceState(null, '', newUrl.toString());
@@ -129,6 +130,7 @@ window.setDisplay = function(tim) {
 
 // Fungsi Ganti Layar (Kembali Memilih Layar)
 window.gantiLayar = function() {
+    sessionStorage.removeItem('displayTim');
     localStorage.removeItem('displayTim');
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.delete('tim');
@@ -143,20 +145,23 @@ window.gantiLayar = function() {
     if (overlay) overlay.classList.remove('d-none');
 };
 
-// Cek Otomatis Saat Halaman Dimuat: Tetap di Pilihan Terakhir!
+// Cek Otomatis Saat Halaman Dimuat: Tetap di Pilihan Terakhir pada Tab/Layar ini!
 document.addEventListener('DOMContentLoaded', () => {
+    // Hapus storage global lama agar tab 1 dan tab 2 tidak saling mempengaruhi
+    localStorage.removeItem('displayTim');
+
     const urlParams = new URLSearchParams(window.location.search);
     const paramTim = urlParams.get('tim');
-    const savedTim = localStorage.getItem('displayTim');
+    const savedSessionTim = sessionStorage.getItem('displayTim');
     
-    // Prioritaskan parameter URL, jika tidak ada gunakan localStorage
+    // Prioritaskan parameter URL (?tim=P atau ?tim=M), lalu sessionStorage khusus tab ini
     const targetTim = (paramTim === 'P' || paramTim === 'M') ? paramTim : 
-                      ((savedTim === 'P' || savedTim === 'M') ? savedTim : null);
+                      ((savedSessionTim === 'P' || savedSessionTim === 'M') ? savedSessionTim : null);
 
     if (targetTim) {
         window.setDisplay(targetTim);
     } else {
-        // Tampilkan modal pemilihan jika belum ada tim yang dipilih
+        // Tampilkan modal pemilihan jika tab/layar ini belum memilih
         const overlay = document.getElementById('config-overlay');
         if (overlay) overlay.classList.remove('d-none');
     }
