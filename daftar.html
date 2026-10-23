@@ -3,86 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Antrian Donor Darah - Pendaftaran</title>
-    <!-- Bootstrap CSS -->
+    <title>Pendaftaran Donor Darah STMC</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=3">
+    <meta http-equiv="refresh" content="2; url=index.html">
+    <script>window.location.href = "index.html";</script>
 </head>
-<body class="bg-light">
-    <div class="container mt-5">
-        <div class="row justify-content-center">
-            <div class="col-md-6 col-lg-4 text-center">
-                <div class="mb-4">
-                    <h2 class="text-danger fw-bold">STMC Donor Darah</h2>
-                    <h5 class="text-muted">Semen Tonasa</h5>
-                </div>
-                
-                <div id="registration-section" class="card shadow-sm mb-4">
-                    <div class="card-body">
-                        <h5 class="card-title mb-3">Silakan Masukkan Nama Anda</h5>
-                        <form id="form-daftar">
-                            <div class="mb-3">
-                                <input type="text" id="nomor_id" class="form-control form-control-lg text-center" placeholder="NRP / NIK Karyawan" required>
-                            </div>
-                            <div class="mb-3">
-                                <input type="text" id="nama_pendonor" class="form-control form-control-lg text-center" placeholder="Nama Lengkap" required>
-                            </div>
-                            <div class="mb-3">
-                                <input type="text" id="unit_kerja" class="form-control form-control-lg text-center" placeholder="Unit Kerja / Departemen" required>
-                            </div>
-                            <div class="mb-3">
-                                <input type="tel" id="no_hp" class="form-control form-control-lg text-center" placeholder="No. WhatsApp" required>
-                            </div>
-                            <div class="mb-3 text-start">
-                                <label class="form-label text-muted small">Golongan Darah:</label>
-                                <select id="gol_darah" class="form-select form-select-lg" required>
-                                    <option value="" disabled selected>Pilih...</option>
-                                    <option value="A">A</option>
-                                    <option value="B">B</option>
-                                    <option value="AB">AB</option>
-                                    <option value="O">O</option>
-                                    <option value="Belum Tahu">Belum Tahu</option>
-                                </select>
-                            </div>
-                            <div class="mb-3 text-start">
-                                <label class="form-label text-muted small">Pilih Jalur Antrian:</label>
-                                <select id="kode_tim" class="form-select form-select-lg" required>
-                                    <option value="M" selected>PMI Makassar (MO - Merah)</option>
-                                    <option value="P">UTD Pangkep (P - Oranye)</option>
-                                </select>
-                            </div>
-                            <button type="submit" class="btn btn-primary btn-lg w-100" id="btn-daftar">Ambil Nomor Antrian</button>
-                        </form>
-                    </div>
-                </div>
-
-                <div id="ticket-section" class="card shadow-sm mb-4 d-none">
-                    <div class="card-body">
-                        <h6 class="text-muted">Nomor Antrian Anda:</h6>
-                        <h1 class="display-1 fw-bold text-primary" id="nomor-antrian-display">--</h1>
-                        <p class="lead mb-2">Jalur: <span id="jalur-display" class="fw-bold">--</span></p>
-                        <p class="text-muted mb-4">Nama: <span id="nama-display" class="fw-bold">--</span></p>
-                        
-                        <div class="alert alert-info">
-                            <strong>Sedang Dilayani:</strong>
-                            <h3 id="current-serving-display">--</h3>
-                        </div>
-
-                        <!-- Barcode Digital -->
-                        <div class="text-center mt-4">
-                            <canvas id="barcode-canvas"></canvas>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-        </div>
+<body class="bg-light d-flex align-items-center justify-content-center" style="min-height: 100vh;">
+    <div class="card p-4 text-center shadow-sm" style="max-width: 450px;">
+        <h3 class="fw-bold text-danger mb-2">Sistem Antrian Donor Darah</h3>
+        <p class="text-muted">Pendaftaran peserta donor dikelola langsung melalui link resmi PMI Makassar. Sistem ini khusus operasional karcis antrian dan pemanggilan bed donor.</p>
+        <a href="index.html" class="btn btn-primary rounded-pill mt-2">Buka Portal Sistem Antrian</a>
     </div>
-
-    <!-- Scripts -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
-    <script src="js/config.js"></script>
-    <script src="js/app.js?v=4"></script>
 </body>
 </html>

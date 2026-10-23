@@ -75,6 +75,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     }
 
+    // Helper: Mencegah Duplikasi Nomor Antrian
+    function deduplicateQueues(items) {
+        if (!items || items.length === 0) return [];
+        const map = new Map();
+        for (const item of items) {
+            const info = getTicketInfo(item);
+            const key = `${info.prefix}-${item.nomor_urut}`;
+            if (!map.has(key)) {
+                map.set(key, item);
+            } else {
+                const prev = map.get(key);
+                const prevTime = prev.waktu_panggil || prev.waktu_ambil || '';
+                const currTime = item.waktu_panggil || item.waktu_ambil || '';
+                if (currTime > prevTime) {
+                    map.set(key, item);
+                }
+            }
+        }
+        return Array.from(map.values());
+    }
+
     // Mendapatkan Prefix Aktif Saat Ini
     function getActivePrefix() {
         if (currentTim === 'P') return 'P';
@@ -117,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             displayTim.innerText = 'PMI Makassar & STMC';
             displayTim.className = 'fw-bold fs-6 text-primary';
-            subdescTim.innerText = 'Layar Gabungan MM Biru & MO Merah';
+            subdescTim.innerText = 'MM Biru & MO Merah';
             
             if (wrapperToggleMakassar) wrapperToggleMakassar.style.display = 'block';
             if (selectLompatPrefix) {
@@ -200,12 +221,12 @@ document.addEventListener('DOMContentLoaded', () => {
             .order('nomor_urut', { ascending: true });
 
         if (data) {
-            cachedAllQueues = data;
+            cachedAllQueues = deduplicateQueues(data);
 
             // Statistik Harian
-            const totalPendaftar = data.length;
-            const sudahSelesai = data.filter(q => q.status === 'selesai' || q.status === 'lewat').length;
-            const sisaAntrian = data.filter(q => q.status === 'menunggu').length;
+            const totalPendaftar = cachedAllQueues.length;
+            const sudahSelesai = cachedAllQueues.filter(q => q.status === 'selesai' || q.status === 'lewat').length;
+            const sisaAntrian = cachedAllQueues.filter(q => q.status === 'menunggu').length;
             
             document.getElementById('stat-total').innerText = totalPendaftar;
             document.getElementById('stat-selesai').innerText = sudahSelesai;
@@ -213,12 +234,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Rincian sub-tim untuk Makassar
             if (currentTim === 'M') {
-                const mmTotal = data.filter(q => getTicketInfo(q).prefix === 'MM').length;
-                const moTotal = data.filter(q => getTicketInfo(q).prefix === 'MO').length;
-                const mmSelesai = data.filter(q => getTicketInfo(q).prefix === 'MM' && (q.status === 'selesai' || q.status === 'lewat')).length;
-                const moSelesai = data.filter(q => getTicketInfo(q).prefix === 'MO' && (q.status === 'selesai' || q.status === 'lewat')).length;
-                const mmSisa = data.filter(q => getTicketInfo(q).prefix === 'MM' && q.status === 'menunggu').length;
-                const moSisa = data.filter(q => getTicketInfo(q).prefix === 'MO' && q.status === 'menunggu').length;
+                const mmTotal = cachedAllQueues.filter(q => getTicketInfo(q).prefix === 'MM').length;
+                const moTotal = cachedAllQueues.filter(q => getTicketInfo(q).prefix === 'MO').length;
+                const mmSelesai = cachedAllQueues.filter(q => getTicketInfo(q).prefix === 'MM' && (q.status === 'selesai' || q.status === 'lewat')).length;
+                const moSelesai = cachedAllQueues.filter(q => getTicketInfo(q).prefix === 'MO' && (q.status === 'selesai' || q.status === 'lewat')).length;
+                const mmSisa = cachedAllQueues.filter(q => getTicketInfo(q).prefix === 'MM' && q.status === 'menunggu').length;
+                const moSisa = cachedAllQueues.filter(q => getTicketInfo(q).prefix === 'MO' && q.status === 'menunggu').length;
 
                 document.getElementById('stat-sub-total').innerText = `MM: ${mmTotal} | MO: ${moTotal}`;
                 document.getElementById('stat-sub-selesai').innerText = `MM: ${mmSelesai} | MO: ${moSelesai}`;
@@ -393,7 +414,7 @@ document.addEventListener('DOMContentLoaded', () => {
             .gte('waktu_ambil', startIso)
             .order('waktu_panggil', { ascending: false });
 
-        renderActiveQueues(data || []);
+        renderActiveQueues(deduplicateQueues(data || []));
     }
 
     function renderActiveQueues(data) {
@@ -577,9 +598,13 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     // --- 4. REGISTRASI CEPAT MEJA DEPAN (PEMBERIAN KARCIS FISIK) ---
+    let isSubmittingQuickReg = false;
     if (formQuickReg) {
         formQuickReg.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (isSubmittingQuickReg) return;
+            isSubmittingQuickReg = true;
+
             const rawNama = inputQuickNama.value.trim();
             const nama = rawNama || '-';
 
@@ -629,6 +654,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 alert('Gagal meregistrasi antrian: ' + (err.message || JSON.stringify(err)));
             } finally {
                 btnSubmit.disabled = false;
+                isSubmittingQuickReg = false;
             }
         });
     }

@@ -53,6 +53,27 @@ function getTicketInfo(item) {
     }
 }
 
+// Helper: Mencegah Duplikasi Nomor Antrian di Layar
+function deduplicateQueues(items) {
+    if (!items || items.length === 0) return [];
+    const map = new Map();
+    for (const item of items) {
+        const info = getTicketInfo(item);
+        const key = `${info.prefix}-${item.nomor_urut}`;
+        if (!map.has(key)) {
+            map.set(key, item);
+        } else {
+            const prev = map.get(key);
+            const prevTime = prev.waktu_panggil || prev.waktu_ambil || '';
+            const currTime = item.waktu_panggil || item.waktu_ambil || '';
+            if (currTime > prevTime) {
+                map.set(key, item);
+            }
+        }
+    }
+    return Array.from(map.values());
+}
+
 // Inisialisasi Suara TTS (Text-to-Speech)
 let voices = [];
 function populateVoiceList() {
@@ -114,7 +135,7 @@ window.setDisplay = function(tim) {
         header.classList.add('theme-makassar');
         title.innerText = 'PMI Makassar & STMC';
         if (subtitle) {
-            subtitle.innerText = 'Satu Layar: MM Biru (Manual) & MO Merah (Online)';
+            subtitle.innerText = 'MM Biru (Manual) & MO Merah (Online)';
             subtitle.className = 'badge bg-danger-subtle text-danger-emphasis fw-bold px-3 py-1';
         }
     }
@@ -181,7 +202,7 @@ async function fetchCurrentDisplay() {
         // Filter tim: Jika Makassar ('M'), ambil data 'M', 'MM', dan 'MO' sekaligus
         const timFilter = displayTim === 'M' ? ['M', 'MM', 'MO'] : ['P'];
 
-        // 1. Fetch antrian yang sedang dipanggil (maksimal 4 di TV)
+        // 1. Fetch antrian yang sedang dipanggil (tanpa batasan 4, mencakup >10 bed donor aktif)
         const panggilPromise = supabaseClient
             .from('antrian')
             .select('*')
@@ -189,7 +210,7 @@ async function fetchCurrentDisplay() {
             .eq('status', 'dipanggil')
             .gte('waktu_ambil', startIso)
             .order('waktu_panggil', { ascending: false })
-            .limit(4);
+            .limit(50);
             
         // 2. Fetch antrian yang sedang menunggu (hingga 1000 antrian)
         const tungguPromise = supabaseClient
@@ -203,12 +224,16 @@ async function fetchCurrentDisplay() {
 
         const [resPanggil, resTunggu] = await Promise.all([panggilPromise, tungguPromise]);
 
+        // Deduplikasi antrian aktif agar tidak ada nomor yang muncul ganda di layar
+        const activeItems = deduplicateQueues(resPanggil.data || []);
+        const waitingItems = deduplicateQueues(resTunggu.data || []);
+
         // Render Antrian Aktif (Kiri)
-        updateUI(resPanggil.data || []);
+        updateUI(activeItems);
 
         // Audio Announcement dipicu jika ada panggilan baru yang paling atas
-        if (resPanggil.data && resPanggil.data.length > 0) {
-            const latestItem = resPanggil.data[0];
+        if (activeItems.length > 0) {
+            const latestItem = activeItems[0];
             if (lastUpdate !== latestItem.waktu_panggil) {
                 speakAnnouncement(latestItem);
                 lastUpdate = latestItem.waktu_panggil;
@@ -216,7 +241,6 @@ async function fetchCurrentDisplay() {
         }
         
         // Render Daftar Menunggu (Kanan)
-        const waitingItems = resTunggu.data || [];
         const waitingCountEl = document.getElementById('tv-waiting-count');
         if (waitingCountEl) {
             waitingCountEl.innerText = `${waitingItems.length} antrian`;
@@ -273,12 +297,22 @@ setInterval(() => {
     }
 }, 45);
 
-// --- RENDER GRID ANTRIAN AKTIF (KIRI) ---
+// --- RENDER GRID ANTRIAN AKTIF (KIRI - UNLIMITED BED DONOR) ---
 function updateUI(items) {
     const grid = document.getElementById('tv-active-grid');
     if (!grid) return;
 
-    if (!items || items.length === 0) {
+    // Pastikan bebas duplikasi
+    const displayItems = deduplicateQueues(items);
+    const count = displayItems.length;
+
+    // Update deskripsi status bed aktif
+    const descBadge = document.getElementById('tv-active-status-desc');
+    if (descBadge) {
+        descBadge.innerText = count > 0 ? `${count} Pasien di Bed Donor` : 'Bed Donor Siap';
+    }
+
+    if (count === 0) {
         grid.innerHTML = `
             <div class="col-12 text-muted my-auto">
                 <h1 class="display-1 fw-bold text-secondary">--</h1>
@@ -289,18 +323,55 @@ function updateUI(items) {
 
     grid.innerHTML = ''; // Kosongkan grid
 
-    // Batasi maksimal 4 antrian aktif di layar TV agar grid proporsional
-    const displayItems = items.slice(0, 4);
-    const colClass = displayItems.length === 1 ? 'col-12' : 'col-6';
+    // Layout kolom & tipografi proporsional fleksibel untuk berapapun jumlah bed (>10 bed)
+    let colClass = 'col-6';
+    let numFontSize = '6.5vw';
+    let nameFontSize = '2vw';
+    let badgeFontSize = '1.1vw';
+    let cardPadding = 'py-3';
+
+    if (count === 1) {
+        colClass = 'col-12';
+        numFontSize = '9.5vw';
+        nameFontSize = '2.8vw';
+        badgeFontSize = '1.4vw';
+        cardPadding = 'py-4';
+    } else if (count === 2) {
+        colClass = 'col-6';
+        numFontSize = '7.5vw';
+        nameFontSize = '2.2vw';
+        badgeFontSize = '1.2vw';
+        cardPadding = 'py-3';
+    } else if (count <= 4) {
+        colClass = 'col-6';
+        numFontSize = '5vw';
+        nameFontSize = '1.6vw';
+        badgeFontSize = '1vw';
+        cardPadding = 'py-2';
+    } else if (count <= 6) {
+        colClass = 'col-4';
+        numFontSize = '3.6vw';
+        nameFontSize = '1.3vw';
+        badgeFontSize = '0.9vw';
+        cardPadding = 'py-2';
+    } else if (count <= 9) {
+        colClass = 'col-4';
+        numFontSize = '2.8vw';
+        nameFontSize = '1.1vw';
+        badgeFontSize = '0.8vw';
+        cardPadding = 'py-2';
+    } else { // 10 bed atau lebih!
+        colClass = 'col-3';
+        numFontSize = '2.2vw';
+        nameFontSize = '0.95vw';
+        badgeFontSize = '0.75vw';
+        cardPadding = 'py-2';
+    }
 
     displayItems.forEach((item, index) => {
         const isLatest = index === 0; // Paling baru dipanggil
         const info = getTicketInfo(item);
         const nama = (item.nama_pendonor && item.nama_pendonor !== '-') ? item.nama_pendonor : 'Peserta Donor';
-        
-        // Ukuran font adaptif berdasarkan jumlah kartu di layar
-        const numFontSize = displayItems.length > 2 ? '5vw' : (displayItems.length === 2 ? '6.8vw' : '9.5vw');
-        const nameFontSize = displayItems.length > 2 ? '1.6vw' : (displayItems.length === 2 ? '2vw' : '2.8vw');
 
         let statusBadgeHTML = '';
         let cardStyle = '';
@@ -312,11 +383,11 @@ function updateUI(items) {
             cardStyle = `
                 background-color: ${info.bgSoft};
                 border: 4px solid ${info.color} !important;
-                border-radius: 20px;
+                border-radius: 18px;
                 box-shadow: 0 12px 30px rgba(0,0,0,0.12);
             `;
             statusBadgeHTML = `
-                <div class="badge badge-status-panggil pulse-badge text-white px-3 py-2 mb-2" style="background-color: ${info.color}; font-size: ${displayItems.length > 2 ? '1vw' : '1.2vw'};">
+                <div class="badge badge-status-panggil pulse-badge text-white px-3 py-1 mb-1" style="background-color: ${info.color}; font-size: ${badgeFontSize};">
                     🔔 SEDANG DIPANGGIL
                 </div>
             `;
@@ -325,11 +396,11 @@ function updateUI(items) {
             cardClass = 'card shadow-sm';
             cardStyle = `
                 background-color: #ffffff;
-                border: 2.5px solid ${info.borderSoft} !important;
-                border-radius: 18px;
+                border: 2px solid ${info.borderSoft} !important;
+                border-radius: 16px;
             `;
             statusBadgeHTML = `
-                <div class="badge badge-status-layani px-3 py-1 mb-2" style="font-size: ${displayItems.length > 2 ? '0.85vw' : '1vw'};">
+                <div class="badge badge-status-layani px-3 py-1 mb-1" style="font-size: ${badgeFontSize};">
                     🩺 SEDANG DILAYANI
                 </div>
             `;
@@ -338,15 +409,15 @@ function updateUI(items) {
         const cardHTML = `
             <div class="${colClass} p-2 my-auto">
                 <div class="${cardClass}" style="${cardStyle}">
-                    <div class="card-body py-3 px-2 d-flex flex-column justify-content-center align-items-center">
+                    <div class="card-body ${cardPadding} px-2 d-flex flex-column justify-content-center align-items-center">
                         ${statusBadgeHTML}
-                        <div class="fw-bold mb-1" style="color: ${info.color}; font-size: ${displayItems.length > 2 ? '1vw' : '1.2vw'}; letter-spacing: 0.5px;">
+                        <div class="fw-bold mb-1" style="color: ${info.color}; font-size: ${badgeFontSize}; letter-spacing: 0.5px;">
                             ${info.badgeType}
                         </div>
                         <div style="font-size: ${numFontSize}; font-weight: 900; line-height: 1; color: ${info.color}; letter-spacing: 1.5px;">
                             ${info.fullCode}
                         </div>
-                        <div style="font-size: ${nameFontSize}; font-weight: 700; color: #1e293b; margin-top: 10px; word-break: break-word;">
+                        <div style="font-size: ${nameFontSize}; font-weight: 700; color: #1e293b; margin-top: 8px; word-break: break-word;">
                             ${nama}
                         </div>
                     </div>

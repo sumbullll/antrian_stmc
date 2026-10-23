@@ -71,7 +71,7 @@
                     </button>
                     <button class="btn btn-lg py-3 text-white fw-bold shadow-sm d-flex flex-column align-items-center" style="background-color: #d32f2f; border-radius: 12px;" onclick="setDisplay('M')">
                         <span class="fs-4">🩸 PMI MAKASSAR & STMC</span>
-                        <small style="opacity: 0.9; font-weight: normal;">Satu Layar: MM Biru (Manual) & MO Merah (Online)</small>
+                        <small style="opacity: 0.9; font-weight: normal;">MM Biru (Manual) & MO Merah (Online)</small>
                     </button>
                 </div>
             </div>
@@ -111,11 +111,11 @@
                             RUANG DONOR DARAH
                         </h4>
                         <span class="badge bg-light text-secondary border px-3 py-2 fw-semibold" id="tv-active-status-desc">
-                            Maksimal 4 Bed Donor Aktif
+                            Pasien di Bed Donor
                         </span>
                     </div>
 
-                    <div id="tv-active-grid" class="row g-3 flex-grow-1 align-items-center justify-content-center text-center w-100 m-0">
+                    <div id="tv-active-grid" class="row g-3 flex-grow-1 align-content-center justify-content-center text-center w-100 m-0" style="overflow-y: auto; max-height: calc(100vh - 235px);">
                         <div class="col-12 text-muted my-auto">
                             <h1 class="display-1 fw-bold text-secondary">--</h1>
                             <h3 class="name-box text-muted">Silakan Menunggu Panggilan</h3>
@@ -155,6 +155,6 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script src="js/display.js?v=9"></script>
+    <script src="js/display.js?v=10"></script>
 </body>
 </html>
