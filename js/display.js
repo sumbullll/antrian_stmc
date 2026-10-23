@@ -30,7 +30,7 @@ function getTicketInfo(item) {
         return {
             prefix: 'MM',
             fullCode: `MM-${numStr}`,
-            badgeType: 'PMI Makassar (Manual)',
+            badgeType: 'PMI Makassar',
             teamVoice: 'PMI Makassar',
             color: '#1976D2',        // Biru Khas Karcis MM Manual
             heroGradient: 'linear-gradient(135deg, #0d47a1 0%, #1565c0 50%, #1976d2 100%)',
@@ -44,7 +44,7 @@ function getTicketInfo(item) {
         return {
             prefix: 'MO',
             fullCode: `MO-${numStr}`,
-            badgeType: 'PMI Makassar (Online)',
+            badgeType: 'PMI Makassar',
             teamVoice: 'PMI Makassar',
             color: '#D32F2F',        // Merah Khas Karcis MO Online
             heroGradient: 'linear-gradient(135deg, #b71c1c 0%, #c62828 50%, #d32f2f 100%)',
