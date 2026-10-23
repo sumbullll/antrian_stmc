@@ -84,21 +84,71 @@ if (speechSynthesis.onvoiceschanged !== undefined) {
     speechSynthesis.onvoiceschanged = populateVoiceList;
 }
 
-// Trick untuk Autoplay Policy Browser
-const btnInitAudio = document.getElementById('btn-init-audio');
-if (btnInitAudio) {
-    btnInitAudio.addEventListener('click', initAudio);
+// Audio Engine & Unlocker (Web Audio API + TTS)
+let audioCtx = null;
+let isAudioUnlocked = false;
+
+function getAudioContext() {
+    if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) {
+            audioCtx = new AudioContextClass();
+        }
+    }
+    return audioCtx;
 }
 
-function initAudio() {
-    if (!isAudioInitialized) {
-        const msg = new SpeechSynthesisUtterance('');
-        msg.volume = 0;
-        window.speechSynthesis.speak(msg);
-        isAudioInitialized = true;
-        console.log('Audio TTS initialized');
+window.unlockAudio = async function() {
+    try {
+        const ctx = getAudioContext();
+        if (ctx && ctx.state === 'suspended') {
+            await ctx.resume();
+        }
+
+        // Pancing SpeechSynthesis agar diizinkan browser
+        window.speechSynthesis.cancel();
+        const dummyUtter = new SpeechSynthesisUtterance(' ');
+        dummyUtter.volume = 0.01;
+        window.speechSynthesis.speak(dummyUtter);
+
+        isAudioUnlocked = true;
+
+        // Sembunyikan banner aktivasi suara jika ada
+        const banner = document.getElementById('audio-enable-banner');
+        if (banner) banner.classList.add('d-none');
+
+        // Update indikator status suara di sudut bawah
+        const badge = document.getElementById('audio-status-badge');
+        if (badge) {
+            badge.className = 'badge bg-success shadow-sm';
+            badge.innerText = '🟢 Suara TV Aktif';
+        }
+
+        console.log('Audio TV berhasil diaktifkan');
+    } catch (err) {
+        console.warn('Audio unlock warning:', err);
     }
-}
+};
+
+window.testTvAudio = async function() {
+    await window.unlockAudio();
+    const testItem = {
+        kode_tim: displayTim || 'M',
+        nomor_urut: 1,
+        nama_pendonor: 'Tes Panggilan',
+        metode_input: displayTim === 'P' ? 'Manual' : 'QR'
+    };
+    await speakAnnouncement(testItem);
+};
+
+// Aktifkan audio otomatis begitu ada klik / interaksi apapun di layar
+['click', 'touchstart', 'keydown'].forEach(evt => {
+    document.addEventListener(evt, () => {
+        if (!isAudioUnlocked) {
+            window.unlockAudio();
+        }
+    }, { once: false });
+});
 
 // --- FUNGSI UTAMA: MENYETEL DISPLAY TV ---
 window.setDisplay = function(tim) {
@@ -234,8 +284,11 @@ async function fetchCurrentDisplay() {
         // Audio Announcement dipicu jika ada panggilan baru yang paling atas
         if (activeItems.length > 0) {
             const latestItem = activeItems[0];
-            if (lastUpdate !== latestItem.waktu_panggil) {
+            if (lastUpdate !== null && lastUpdate !== latestItem.waktu_panggil) {
                 speakAnnouncement(latestItem);
+                lastUpdate = latestItem.waktu_panggil;
+            } else if (lastUpdate === null) {
+                // Simpan timestamp awal saat TV pertama kali dibuka agar tidak mengulang panggilan lama
                 lastUpdate = latestItem.waktu_panggil;
             }
         }
@@ -438,42 +491,56 @@ setInterval(() => {
 }, 1000);
 
 // --- BEL TING-TONG (Web Audio API) ---
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-function playChime() {
-    return new Promise((resolve) => {
-        if (audioCtx.state === 'suspended') audioCtx.resume();
-        
-        // Nada 1 (Ting)
-        const osc1 = audioCtx.createOscillator();
-        const gain1 = audioCtx.createGain();
-        osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(659.25, audioCtx.currentTime); // E5
-        gain1.gain.setValueAtTime(0, audioCtx.currentTime);
-        gain1.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
-        gain1.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1);
-        osc1.connect(gain1);
-        gain1.connect(audioCtx.destination);
-        osc1.start();
-        osc1.stop(audioCtx.currentTime + 1);
+async function playChime() {
+    try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        if (ctx.state === 'suspended') {
+            await ctx.resume();
+        }
 
-        // Nada 2 (Tong)
-        setTimeout(() => {
-            const osc2 = audioCtx.createOscillator();
-            const gain2 = audioCtx.createGain();
-            osc2.type = 'sine';
-            osc2.frequency.setValueAtTime(523.25, audioCtx.currentTime); // C5
-            gain2.gain.setValueAtTime(0, audioCtx.currentTime);
-            gain2.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.05);
-            gain2.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
-            osc2.connect(gain2);
-            gain2.connect(audioCtx.destination);
-            osc2.start();
-            osc2.stop(audioCtx.currentTime + 1.5);
-        }, 500);
+        return new Promise((resolve) => {
+            const now = ctx.currentTime;
 
-        // Beri jeda 1.4 detik sebelum TTS bersuara
-        setTimeout(resolve, 1400);
-    });
+            // Nada 1: Ting (E5 = 659.25 Hz)
+            const osc1 = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            osc1.frequency.setValueAtTime(659.25, now);
+            gain1.gain.setValueAtTime(0, now);
+            gain1.gain.linearRampToValueAtTime(0.45, now + 0.05);
+            gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
+            osc1.connect(gain1);
+            gain1.connect(ctx.destination);
+            osc1.start(now);
+            osc1.stop(now + 0.85);
+
+            // Nada 2: Tong (C5 = 523.25 Hz)
+            setTimeout(() => {
+                try {
+                    const now2 = ctx.currentTime;
+                    const osc2 = ctx.createOscillator();
+                    const gain2 = ctx.createGain();
+                    osc2.type = 'sine';
+                    osc2.frequency.setValueAtTime(523.25, now2);
+                    gain2.gain.setValueAtTime(0, now2);
+                    gain2.gain.linearRampToValueAtTime(0.45, now2 + 0.05);
+                    gain2.gain.exponentialRampToValueAtTime(0.001, now2 + 1.1);
+                    osc2.connect(gain2);
+                    gain2.connect(ctx.destination);
+                    osc2.start(now2);
+                    osc2.stop(now2 + 1.1);
+                } catch (e) {
+                    console.warn(e);
+                }
+            }, 350);
+
+            // Beri jeda 1.2 detik sebelum pengucapan suara TTS
+            setTimeout(resolve, 1200);
+        });
+    } catch (err) {
+        console.warn('Play chime error:', err);
+    }
 }
 
 // Helper: Ubah Kode Karcis agar Diucapkan Jelas oleh Suara TTS
@@ -495,27 +562,40 @@ function formatCodeForSpeech(fullCode) {
 async function speakAnnouncement(item) {
     if (!('speechSynthesis' in window)) return;
 
-    // Putar bel Ting-Tong
-    await playChime();
+    try {
+        // Selalu bersihkan antrian TTS sebelumnya agar tidak tertahan / macet
+        window.speechSynthesis.cancel();
 
-    const info = getTicketInfo(item);
-    const spokenCode = formatCodeForSpeech(info.fullCode);
-    const nama = (item.nama_pendonor || '').trim();
+        // Putar bel Ting-Tong
+        await playChime();
 
-    let text = '';
-    if (nama && nama !== '-' && !nama.toLowerCase().startsWith('peserta ')) {
-        text = `Nomor antrian, ${spokenCode}, atas nama ${nama}, silakan menuju ${info.teamVoice}.`;
-    } else {
-        text = `Nomor antrian, ${spokenCode}, silakan menuju ${info.teamVoice}.`;
+        const info = getTicketInfo(item);
+        const spokenCode = formatCodeForSpeech(info.fullCode);
+        const nama = (item.nama_pendonor || '').trim();
+
+        let text = '';
+        if (nama && nama !== '-' && !nama.toLowerCase().startsWith('peserta ')) {
+            text = `Nomor antrian, ${spokenCode}, atas nama ${nama}, silakan menuju ${info.teamVoice}.`;
+        } else {
+            text = `Nomor antrian, ${spokenCode}, silakan menuju ${info.teamVoice}.`;
+        }
+
+        const msg = new SpeechSynthesisUtterance(text);
+        msg.lang = 'id-ID';
+        msg.rate = 0.9;
+        msg.pitch = 1.0;
+        msg.volume = 1.0;
+
+        // Cari suara bahasa Indonesia jika tersedia di sistem
+        const allVoices = window.speechSynthesis.getVoices();
+        const idVoice = allVoices.find(v => v.lang.toLowerCase().includes('id') || v.lang.toLowerCase().includes('ind'));
+        if (idVoice) msg.voice = idVoice;
+
+        msg.onstart = () => console.log('🔊 Panggilan suara dimulai:', text);
+        msg.onerror = (e) => console.error('TTS error:', e);
+
+        window.speechSynthesis.speak(msg);
+    } catch (err) {
+        console.error('Error saat pemanggilan suara:', err);
     }
-
-    const msg = new SpeechSynthesisUtterance(text);
-    msg.lang = 'id-ID';
-    msg.rate = 0.88; // Sedikit santai agar terdengar sangat berwibawa dan artikulatif
-    
-    // Gunakan voice bahasa Indonesia jika terpasang di sistem pengguna
-    const idVoice = voices.find(v => v.lang.toLowerCase().includes('id'));
-    if (idVoice) msg.voice = idVoice;
-
-    window.speechSynthesis.speak(msg);
 }
