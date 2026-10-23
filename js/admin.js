@@ -27,122 +27,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputSearchQueue = document.getElementById('input-search-queue');
     const formManual = document.getElementById('form-manual');
 
-    const toggleAdminSound = document.getElementById('toggle-admin-sound');
-    const btnTestSound = document.getElementById('btn-test-sound');
-
-    // Web Audio & TTS Engine Khusus Laptop Operator
-    let adminAudioCtx = null;
-    function getAdminAudioContext() {
-        if (!adminAudioCtx) {
-            const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-            if (AudioContextClass) adminAudioCtx = new AudioContextClass();
-        }
-        return adminAudioCtx;
-    }
-
-    async function playChimeAdmin() {
-        try {
-            const ctx = getAdminAudioContext();
-            if (!ctx) return;
-            if (ctx.state === 'suspended') {
-                await ctx.resume();
-            }
-
-            return new Promise((resolve) => {
-                const now = ctx.currentTime;
-                const osc1 = ctx.createOscillator();
-                const gain1 = ctx.createGain();
-                osc1.type = 'sine';
-                osc1.frequency.setValueAtTime(659.25, now);
-                gain1.gain.setValueAtTime(0, now);
-                gain1.gain.linearRampToValueAtTime(0.4, now + 0.05);
-                gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.85);
-                osc1.connect(gain1);
-                gain1.connect(ctx.destination);
-                osc1.start(now);
-                osc1.stop(now + 0.85);
-
-                setTimeout(() => {
-                    try {
-                        const now2 = ctx.currentTime;
-                        const osc2 = ctx.createOscillator();
-                        const gain2 = ctx.createGain();
-                        osc2.type = 'sine';
-                        osc2.frequency.setValueAtTime(523.25, now2);
-                        gain2.gain.setValueAtTime(0, now2);
-                        gain2.gain.linearRampToValueAtTime(0.4, now2 + 0.05);
-                        gain2.gain.exponentialRampToValueAtTime(0.001, now2 + 1.1);
-                        osc2.connect(gain2);
-                        gain2.connect(ctx.destination);
-                        osc2.start(now2);
-                        osc2.stop(now2 + 1.1);
-                    } catch (e) {}
-                }, 350);
-
-                setTimeout(resolve, 1200);
-            });
-        } catch (err) {
-            console.warn(err);
-        }
-    }
-
-    function formatCodeForSpeech(fullCode) {
-        const parts = fullCode.split('-');
-        const prefixSpoken = parts[0].split('').join(' ');
-        const numberDigits = (parts[1] || '').split('').map(d => d === '0' ? 'kosong' : d).join(' ');
-        return `${prefixSpoken}, ${numberDigits}`;
-    }
-
-    async function playAdminSound(item) {
-        if (!toggleAdminSound || !toggleAdminSound.checked) return;
-        if (!('speechSynthesis' in window)) return;
-
-        try {
-            window.speechSynthesis.cancel();
-            await playChimeAdmin();
-
-            const info = getTicketInfo(item);
-            const spokenCode = formatCodeForSpeech(info.fullCode);
-            const teamVoice = item.kode_tim === 'P' ? 'UTD Pangkep' : 'PMI Makassar';
-            const nama = (item.nama_pendonor || '').trim();
-
-            let text = '';
-            if (nama && nama !== '-' && !nama.toLowerCase().startsWith('peserta ')) {
-                text = `Nomor antrian, ${spokenCode}, atas nama ${nama}, silakan menuju ${teamVoice}.`;
-            } else {
-                text = `Nomor antrian, ${spokenCode}, silakan menuju ${teamVoice}.`;
-            }
-
-            const msg = new SpeechSynthesisUtterance(text);
-            msg.lang = 'id-ID';
-            msg.rate = 0.9;
-
-            const allVoices = window.speechSynthesis.getVoices();
-            const idVoice = allVoices.find(v => v.lang.toLowerCase().includes('id') || v.lang.toLowerCase().includes('ind'));
-            if (idVoice) msg.voice = idVoice;
-
-            window.speechSynthesis.speak(msg);
-        } catch (err) {
-            console.error('Error saat pemanggilan suara admin:', err);
-        }
-    }
-
-    if (btnTestSound) {
-        btnTestSound.addEventListener('click', async () => {
-            const ctx = getAdminAudioContext();
-            if (ctx && ctx.state === 'suspended') await ctx.resume();
-            
-            const prefix = getActivePrefix();
-            const testItem = {
-                kode_tim: currentTim === 'P' ? 'P' : 'M',
-                nomor_urut: 1,
-                nama_pendonor: 'Tes Panggilan Operator',
-                metode_input: prefix === 'MO' ? 'QR' : 'Manual'
-            };
-            playAdminSound(testItem);
-        });
-    }
-
     // State
     let currentTim = localStorage.getItem('adminCurrentTim') || loginTim.value || 'M';
     loginTim.value = currentTim;
@@ -487,18 +371,13 @@ document.addEventListener('DOMContentLoaded', () => {
             btn.addEventListener('click', async (e) => {
                 const button = e.currentTarget;
                 const id = button.getAttribute('data-id');
-                const { data: updated } = await supabaseClient
+                await supabaseClient
                     .from('antrian')
                     .update({ 
                         status: 'dipanggil',
                         waktu_panggil: new Date().toISOString()
                     })
-                    .eq('id_antrian', id)
-                    .select('*');
-                
-                if (updated && updated.length > 0) {
-                    playAdminSound(updated[0]);
-                }
+                    .eq('id_antrian', id);
                 fetchQueue();
                 fetchActive();
             });
@@ -587,15 +466,7 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.btn-ulang').forEach(btn => {
             btn.addEventListener('click', async (e) => {
                 const id = e.currentTarget.getAttribute('data-id');
-                const { data: updated } = await supabaseClient
-                    .from('antrian')
-                    .update({ waktu_panggil: new Date().toISOString() })
-                    .eq('id_antrian', id)
-                    .select('*');
-                
-                if (updated && updated.length > 0) {
-                    playAdminSound(updated[0]);
-                }
+                await supabaseClient.from('antrian').update({ waktu_panggil: new Date().toISOString() }).eq('id_antrian', id);
                 fetchActive();
             });
         });
@@ -635,18 +506,13 @@ document.addEventListener('DOMContentLoaded', () => {
             .limit(1);
 
         if (data && data.length > 0) {
-            const { data: updated } = await supabaseClient
+            await supabaseClient
                 .from('antrian')
                 .update({ 
                     status: 'dipanggil',
                     waktu_panggil: new Date().toISOString()
                 })
-                .eq('id_antrian', data[0].id_antrian)
-                .select('*');
-            
-            if (updated && updated.length > 0) {
-                playAdminSound(updated[0]);
-            }
+                .eq('id_antrian', data[0].id_antrian);
             
             fetchQueue();
             fetchActive();
@@ -703,22 +569,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (existing) {
                 // Ubah status antrian yang sudah ada menjadi dipanggil
-                const { data: updated } = await supabaseClient
+                await supabaseClient
                     .from('antrian')
                     .update({
                         status: 'dipanggil',
                         waktu_panggil: new Date().toISOString()
                     })
-                    .eq('id_antrian', existing.id_antrian)
-                    .select('*');
-                
-                if (updated && updated.length > 0) {
-                    playAdminSound(updated[0]);
-                }
+                    .eq('id_antrian', existing.id_antrian);
             } else {
                 // Buatkan otomatis slot antriannya dan panggil
                 const metodeInput = targetPrefix === 'MO' ? 'QR' : 'Manual';
-                const { data: created } = await supabaseClient
+                await supabaseClient
                     .from('antrian')
                     .insert({
                         kode_tim: currentTim === 'P' ? 'P' : 'M',
@@ -727,12 +588,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         metode_input: metodeInput,
                         status: 'dipanggil',
                         waktu_panggil: new Date().toISOString()
-                    })
-                    .select('*');
-                
-                if (created && created.length > 0) {
-                    playAdminSound(created[0]);
-                }
+                    });
             }
 
             inputLompat.value = '';

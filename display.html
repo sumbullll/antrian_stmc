@@ -54,18 +54,6 @@
     </style>
 </head>
 <body>
-    <!-- Banner Aktivasi Suara TV (Muncul saat pertama kali dibuka) -->
-    <div id="audio-enable-banner" class="position-absolute top-0 start-50 translate-middle-x mt-3 shadow-lg px-4 py-2 rounded-pill bg-danger text-white d-flex align-items-center gap-3" style="z-index: 3000; cursor: pointer; animation: pulse-badge 1.8s infinite;" onclick="unlockAudio()">
-        <span class="fs-4">🔊</span>
-        <div class="text-start">
-            <div class="fw-bold" style="font-size: 0.95rem;">Klik di Sini untuk Mengaktifkan Suara TV</div>
-            <small style="opacity: 0.9; font-size: 0.75rem;">Izin browser 1x klik agar bel Ting-Tong & suara panggilan terdengar</small>
-        </div>
-        <button class="btn btn-light btn-sm fw-bold rounded-pill px-3 py-1 shadow-sm text-danger" style="font-size: 0.8rem;">
-            Aktifkan Suara
-        </button>
-    </div>
-
     <div class="display-container">
         <!-- Overlay Pemilihan Layar (Hanya muncul jika belum pernah dipilih) -->
         <div id="config-overlay" class="position-absolute top-0 start-0 w-100 h-100 d-none d-flex align-items-center justify-content-center">
@@ -158,23 +146,15 @@
         </div>
     </div>
 
-    <!-- Tombol Khusus Operator: Status Suara & Ganti Layar -->
-    <div class="position-absolute bottom-0 start-0 m-2 d-flex align-items-center gap-2" style="z-index: 1001;">
-        <span id="audio-status-badge" class="badge bg-secondary shadow-sm px-3 py-2" style="font-size: 0.8rem; cursor: pointer;" onclick="unlockAudio()" title="Klik untuk mengaktifkan suara TV">
-            🔈 Suara TV: Klik untuk Aktifkan
-        </span>
-        <button id="btn-test-tv-audio" class="btn btn-light btn-sm shadow-sm border py-1 px-3 fw-semibold rounded-pill" style="font-size: 0.78rem;" onclick="testTvAudio()" title="Uji Coba Suara TV">
-            🔔 Tes Suara TV
-        </button>
-    </div>
-
+    <!-- Tombol Khusus Operator: Ganti Layar -->
     <button id="btn-ganti-layar" class="btn btn-dark btn-sm rounded-pill px-3 py-1 position-absolute bottom-0 end-0 m-2 shadow border opacity-75 d-flex align-items-center gap-1" style="z-index: 1001; font-size: 0.75rem;" onclick="gantiLayar()" title="Pilih Ulang Layar TV">
         <span>🔄</span> Ganti Layar
     </button>
+    <button id="btn-init-audio" class="btn btn-secondary position-absolute bottom-0 start-0 m-2" style="opacity: 0.05; z-index: 999; font-size: 0.7rem;">Init Audio</button>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script src="js/display.js?v=11"></script>
+    <script src="js/display.js?v=12"></script>
 </body>
 </html>
