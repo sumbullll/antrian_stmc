@@ -1,16 +1,15 @@
-/* style.css */
+/* css/style.css */
 body {
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
 /* Make things look a bit softer */
 .card {
-    border-radius: 12px;
-    border: none;
+    border-radius: 14px;
 }
 
 /* Scanner or general mobile fixes */
-input[type="text"] {
+input[type="text"], input[type="number"], select {
     border-radius: 8px;
 }
 
@@ -29,4 +28,126 @@ input[type="text"] {
     animation: flash 1.5s ease-in-out;
 }
 
+/* --- TV Display Card Animations --- */
 
+/* Efek Berdenyut Menyala (Pulse Glow) untuk Antrian yang BARU DIPANGGIL */
+@keyframes callGlowPulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 16px rgba(220, 53, 69, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+    }
+}
+
+@keyframes callGlowPulseOrange {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.65);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 16px rgba(253, 126, 20, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(253, 126, 20, 0);
+    }
+}
+
+@keyframes callGlowPulseBlue {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.65);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 16px rgba(25, 118, 210, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0);
+    }
+}
+
+@keyframes callGlowPulseRed {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.65);
+    }
+    50% {
+        transform: scale(1.02);
+        box-shadow: 0 0 0 16px rgba(211, 47, 47, 0);
+    }
+    100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(211, 47, 47, 0);
+    }
+}
+
+.calling-pulse-P {
+    animation: callGlowPulseOrange 2.2s infinite ease-in-out;
+}
+
+.calling-pulse-MM {
+    animation: callGlowPulseBlue 2.2s infinite ease-in-out;
+}
+
+.calling-pulse-MO {
+    animation: callGlowPulseRed 2.2s infinite ease-in-out;
+}
+
+/* Animasi Denyut Badge "SEDANG DIPANGGIL" */
+@keyframes badgeBlink {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.88;
+        transform: scale(1.06);
+    }
+}
+
+.pulse-badge {
+    animation: badgeBlink 1.6s infinite ease-in-out;
+    display: inline-block;
+}
+
+/* Card Status Badges */
+.badge-status-panggil {
+    font-weight: 800;
+    letter-spacing: 1.5px;
+    border-radius: 50rem;
+    box-shadow: 0 3px 8px rgba(0,0,0,0.15);
+}
+
+.badge-status-layani {
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 50rem;
+    background-color: #475569;
+    color: #ffffff;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
+}

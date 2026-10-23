@@ -3,52 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Admin - Sistem Antrian</title>
+    <title>Dashboard Admin - Sistem Antrian Donor Darah STMC</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=2">
+    <link rel="stylesheet" href="css/style.css?v=3">
+    <style>
+        .badge-pangkep { background-color: #fff3e0; color: #d9480f; border: 1px solid #ffd8a8; }
+        .badge-mm { background-color: #e0f2fe; color: #0284c7; border: 1px solid #bae6fd; }
+        .badge-mo { background-color: #fee2e2; color: #dc2626; border: 1px solid #fecaca; }
+    </style>
 </head>
 <body class="bg-light">
     <!-- Navbar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Dashboard Admin Donor Darah</a>
+            <a class="navbar-brand fw-bold" href="#">
+                🩸 Dashboard Admin Antrian STMC
+            </a>
             <div class="d-flex text-white align-items-center">
-                <button id="btn-export" class="btn btn-sm btn-success me-3 d-flex align-items-center">
-                    <span class="me-1">📊</span> Ekspor Excel
+                <button id="btn-export" class="btn btn-sm btn-success me-3 d-flex align-items-center shadow-sm">
+                    <span class="me-1">📊</span> Ekspor Excel (CSV)
                 </button>
-                <span class="me-3">Tim Bertugas: <strong id="admin-tim-display">--</strong></span>
-                <select id="login-tim" class="form-select form-select-sm" style="width: auto;">
+                <span class="me-2 text-white-50">Layar Aktif:</span>
+                <select id="login-tim" class="form-select form-select-sm fw-bold border-0 shadow-sm" style="width: auto; background-color: #ffffff; color: #0f172a;">
+                    <option value="M">PMI Makassar (MM & MO)</option>
                     <option value="P">UTD Pangkep (P)</option>
-                    <option value="M">PMI Makassar (M)</option>
                 </select>
             </div>
         </div>
     </nav>
 
     <div class="container">
+        <!-- Banner Tim Aktif -->
+        <div class="alert alert-info py-2 px-3 mb-3 d-flex justify-content-between align-items-center shadow-sm">
+            <div>
+                <span class="fw-bold fs-6" id="admin-tim-display">PMI Makassar & STMC</span>
+                <span class="badge bg-light text-dark ms-2" id="admin-tim-subdesc">Layar Gabungan MM Biru & MO Merah</span>
+            </div>
+            <a href="display.html" target="_blank" class="btn btn-sm btn-outline-primary fw-semibold">
+                📺 Buka Layar TV Display
+            </a>
+        </div>
+
         <!-- Statistik Harian -->
-        <div class="row mb-4">
+        <div class="row mb-4 g-3">
             <div class="col-md-4">
-                <div class="card bg-primary text-white shadow-sm mb-3 mb-md-0">
+                <div class="card bg-primary text-white shadow-sm h-100">
                     <div class="card-body text-center py-2">
-                        <h6 class="m-0 text-white-50">Total Pendaftar</h6>
+                        <h6 class="m-0 text-white-50">Total Pendaftar Hari Ini</h6>
                         <h3 class="m-0 fw-bold" id="stat-total">0</h3>
+                        <small id="stat-sub-total" class="text-white-75" style="font-size: 0.8rem;"></small>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card bg-success text-white shadow-sm mb-3 mb-md-0">
+                <div class="card bg-success text-white shadow-sm h-100">
                     <div class="card-body text-center py-2">
-                        <h6 class="m-0 text-white-50">Sudah Selesai</h6>
+                        <h6 class="m-0 text-white-50">Sudah Selesai Donor</h6>
                         <h3 class="m-0 fw-bold" id="stat-selesai">0</h3>
+                        <small id="stat-sub-selesai" class="text-white-75" style="font-size: 0.8rem;"></small>
                     </div>
                 </div>
             </div>
             <div class="col-md-4">
-                <div class="card bg-warning text-dark shadow-sm">
+                <div class="card bg-warning text-dark shadow-sm h-100">
                     <div class="card-body text-center py-2">
-                        <h6 class="m-0 text-dark-50">Sisa Antrian</h6>
+                        <h6 class="m-0 text-dark-50">Sisa Antrian Menunggu</h6>
                         <h3 class="m-0 fw-bold" id="stat-sisa">0</h3>
+                        <small id="stat-sub-sisa" class="text-muted" style="font-size: 0.8rem;"></small>
                     </div>
                 </div>
             </div>
@@ -59,28 +80,32 @@
             <div class="col-md-7 mb-4">
                 <div class="card shadow-sm h-100 border-primary">
                     <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
-                        <h5 class="card-title mb-0">Sedang Dilayani (Aktif)</h5>
-                        <span class="badge bg-light text-primary rounded-pill" id="active-count-badge">0</span>
+                        <h5 class="card-title mb-0 fw-bold">Sedang Dilayani di Ruang Donor</h5>
+                        <span class="badge bg-white text-primary rounded-pill fw-bold" id="active-count-badge">0 Aktif</span>
                     </div>
-                    <div class="card-body bg-light p-3" id="active-queue-container" style="max-height: 450px; overflow-y: auto;">
+                    <div class="card-body bg-light p-3" id="active-queue-container" style="max-height: 480px; overflow-y: auto;">
                         <div class="text-center text-muted py-5" id="no-active-msg">
-                            <h4 class="fw-light">Belum ada pasien aktif</h4>
-                            <small>Klik "Panggil Selanjutnya" untuk memulai</small>
+                            <h4 class="fw-light">Belum ada pasien aktif di bed</h4>
+                            <small>Klik "Panggil Selanjutnya" untuk memanggil pasien</small>
                         </div>
                     </div>
                     <div class="card-footer bg-white border-top p-3">
                         <button id="btn-panggil-selanjutnya" class="btn btn-primary btn-lg w-100 py-3 fw-bold shadow-sm mb-3" disabled>
                             📢 Panggil Selanjutnya (+)
                         </button>
-                        <div class="row g-2">
-                            <div class="col-sm-5">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-sm-4">
                                 <button id="btn-mundur" class="btn btn-outline-secondary w-100 py-2 fw-semibold">
                                     ⏪ Mundur (-)
                                 </button>
                             </div>
-                            <div class="col-sm-7">
-                                <form id="form-lompat" class="d-flex">
-                                    <input type="number" id="input-lompat-nomor" class="form-control me-2" placeholder="No. misal: 15" min="1" max="999" required>
+                            <div class="col-sm-8">
+                                <form id="form-lompat" class="d-flex align-items-center">
+                                    <select id="select-lompat-prefix" class="form-select me-1 fw-bold text-center" style="max-width: 85px;">
+                                        <option value="MM">MM</option>
+                                        <option value="MO">MO</option>
+                                    </select>
+                                    <input type="number" id="input-lompat-nomor" class="form-control me-2" placeholder="Nomor: 15" min="1" max="999" required>
                                     <button type="submit" class="btn btn-outline-primary text-nowrap fw-semibold">🎯 Panggil</button>
                                 </form>
                             </div>
@@ -94,19 +119,34 @@
                 <!-- Registrasi Cepat Meja Depan -->
                 <div class="card shadow-sm mb-4 border-success">
                     <div class="card-header bg-success text-white d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0 fw-bold">Registrasi Kertas Antrian</h6>
-                        <span class="badge bg-white text-success fw-bold" id="badge-next-ticket">Nomor: ...</span>
+                        <h6 class="card-title mb-0 fw-bold">Registrasi Karcis Fisik</h6>
+                        <span class="badge bg-white text-success fw-bold" id="badge-next-ticket">Berikutnya: ...</span>
                     </div>
                     <div class="card-body">
+                        <!-- Toggle MM vs MO khusus PMI Makassar -->
+                        <div id="wrapper-toggle-makassar" class="mb-3">
+                            <div class="btn-group w-100 shadow-sm" role="group">
+                                <input type="radio" class="btn-check" name="sub_tim_makassar" id="radio-mm" value="MM" autocomplete="off" checked>
+                                <label class="btn btn-outline-primary fw-bold" for="radio-mm">
+                                    🟦 MM (Manual / Biru)
+                                </label>
+
+                                <input type="radio" class="btn-check" name="sub_tim_makassar" id="radio-mo" value="MO" autocomplete="off">
+                                <label class="btn btn-outline-danger fw-bold" for="radio-mo">
+                                    🟥 MO (Online / Merah)
+                                </label>
+                            </div>
+                        </div>
+
                         <form id="form-quick-reg">
                             <div class="input-group mb-2">
-                                <span class="input-group-text bg-light fw-bold text-success" id="label-tim-prefix">M-</span>
+                                <span class="input-group-text bg-light fw-bold text-primary" id="label-tim-prefix" style="font-size: 1.1rem;">MM-</span>
                                 <input type="number" id="quick-nomor" class="form-control form-control-lg fw-bold text-center" style="max-width: 90px;" min="1" max="999" title="Nomor Kertas Fisik" required>
-                                <input type="text" id="quick-nama" class="form-control form-control-lg" placeholder="Ketik nama pendonor..." autofocus>
-                                <button class="btn btn-success fw-bold text-nowrap" type="submit">+ Simpan</button>
+                                <input type="text" id="quick-nama" class="form-control form-control-lg" placeholder="Nama pendonor..." autofocus>
+                                <button class="btn btn-success fw-bold text-nowrap px-3" type="submit">+ Simpan</button>
                             </div>
                             <div class="d-flex justify-content-between align-items-center">
-                                <small class="text-muted fst-italic">Nomor otomatis urut, bisa diedit jika perlu</small>
+                                <small class="text-muted fst-italic">Nomor urut otomatis sesuai karcis fisik</small>
                                 <a href="#" class="small text-decoration-none text-muted" data-bs-toggle="modal" data-bs-target="#manualModal">
                                     + Data Lengkap (NIK/HP)
                                 </a>
@@ -118,15 +158,25 @@
                 <!-- Daftar Antrian Hari Ini -->
                 <div class="card shadow-sm">
                     <div class="card-header bg-secondary text-white d-flex justify-content-between align-items-center">
-                        <h6 class="card-title mb-0">Daftar Antrian Hari Ini</h6>
-                        <span class="badge bg-light text-dark" id="admin-queue-count">0</span>
+                        <h6 class="card-title mb-0 fw-bold">Daftar Antrian Hari Ini</h6>
+                        <span class="badge bg-light text-dark fw-bold" id="admin-queue-count">0</span>
                     </div>
+
+                    <!-- Filter Tabs Khusus Makassar -->
+                    <div id="filter-tabs-container" class="p-2 border-bottom bg-light">
+                        <div class="btn-group btn-group-sm w-100" role="group">
+                            <button type="button" class="btn btn-outline-secondary active filter-tab-btn" data-filter="all">Semua</button>
+                            <button type="button" class="btn btn-outline-primary filter-tab-btn" data-filter="MM">MM Biru (Manual)</button>
+                            <button type="button" class="btn btn-outline-danger filter-tab-btn" data-filter="MO">MO Merah (Online)</button>
+                        </div>
+                    </div>
+
                     <div class="p-2 border-bottom bg-light">
-                        <input type="text" id="input-search-queue" class="form-control form-control-sm" placeholder="🔍 Cari nomor atau nama...">
+                        <input type="text" id="input-search-queue" class="form-control form-control-sm" placeholder="🔍 Cari nomor (misal: 15 atau MM-015) atau nama...">
                     </div>
                     <div class="card-body p-0" style="max-height: 380px; overflow-y: auto;">
                         <ul class="list-group list-group-flush" id="admin-queue-list">
-                            <li class="list-group-item text-center text-muted">Belum ada antrian.</li>
+                            <li class="list-group-item text-center text-muted">Memuat antrian...</li>
                         </ul>
                     </div>
                 </div>
@@ -134,23 +184,35 @@
         </div>
     </div>
 
-    <!-- Modal Input Manual -->
+    <!-- Modal Input Manual (Data Lengkap) -->
     <div class="modal fade" id="manualModal" tabindex="-1" aria-labelledby="manualModalLabel" aria-hidden="true">
         <div class="modal-dialog">
             <div class="modal-content">
                 <form id="form-manual">
                     <div class="modal-header bg-secondary text-white">
-                        <h5 class="modal-title" id="manualModalLabel">Tambah Antrian Manual</h5>
+                        <h5 class="modal-title" id="manualModalLabel">Tambah Antrian Manual (Data Lengkap)</h5>
                         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <div class="mb-3">
-                            <label class="form-label fw-bold">NRP / NIK</label>
-                            <input type="text" class="form-control" id="manual_nomor_id" placeholder="Opsional">
+                            <label class="form-label fw-bold">Jenis Antrian / Karcis</label>
+                            <select class="form-select" id="manual_tipe_antrian">
+                                <option value="MM">PMI Makassar - MM (Manual / Biru)</option>
+                                <option value="MO">PMI Makassar - MO (Online / Merah)</option>
+                                <option value="P">UTD Pangkep - P (Oranye)</option>
+                            </select>
                         </div>
                         <div class="mb-3">
-                            <label class="form-label fw-bold">Nama Pendonor</label>
+                            <label class="form-label fw-bold">Nomor Karcis (Opsional / Kosongkan untuk otomatis)</label>
+                            <input type="number" class="form-control" id="manual_nomor_karcis" placeholder="Otomatis jika dikosongkan">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Nama Pendonor <span class="text-danger">*</span></label>
                             <input type="text" class="form-control" id="manual_nama" placeholder="Wajib Diisi" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">NRP / NIK</label>
+                            <input type="text" class="form-control" id="manual_nomor_id" placeholder="Opsional">
                         </div>
                         <div class="mb-3">
                             <label class="form-label fw-bold">Unit Kerja / Departemen</label>
@@ -181,9 +243,10 @@
         </div>
     </div>
 
+    <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script src="js/admin.js?v=3"></script>
+    <script src="js/admin.js?v=4"></script>
 </body>
 </html>

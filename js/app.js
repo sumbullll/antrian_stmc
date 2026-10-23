@@ -1,4 +1,4 @@
-// js/app.js
+// js/app.js - Registrasi Online Donor Darah STMC
 
 document.addEventListener('DOMContentLoaded', () => {
     const urlParams = new URLSearchParams(window.location.search);
@@ -6,13 +6,12 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const selectTim = document.getElementById('kode_tim');
     const btnDaftar = document.getElementById('btn-daftar');
-    const errorJalur = document.getElementById('error-jalur');
     const formDaftar = document.getElementById('form-daftar');
 
     const regSection = document.getElementById('registration-section');
     const ticketSection = document.getElementById('ticket-section');
 
-    // Cek parameter dari QR Code (Opsional, agar bisa auto-select jika pakai QR)
+    // Cek parameter dari QR Code / Link
     if (timParam === 'P' || timParam === 'M') {
         selectTim.value = timParam;
     }
@@ -32,7 +31,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnDaftar.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Mendaftar...';
 
         try {
-            // Gunakan RPC untuk mencegah bentrok nomor antrian
+            // Gunakan RPC untuk auto-increment nomor antrian
             const { data, error } = await supabaseClient.rpc('get_next_antrian', {
                 p_kode_tim: tim,
                 p_nama: nama,
@@ -61,15 +60,25 @@ document.addEventListener('DOMContentLoaded', () => {
         regSection.classList.add('d-none');
         ticketSection.classList.remove('d-none');
 
-        const queueNumber = `${queueData.kode_tim}-${String(queueData.nomor_urut).padStart(3, '0')}`;
-        document.getElementById('nomor-antrian-display').innerText = queueNumber;
-        document.getElementById('jalur-display').innerText = queueData.kode_tim === 'P' ? 'Semen Tonasa Medical Center' : 'PMI Makassar';
+        const isPangkep = queueData.kode_tim === 'P';
+        const prefix = isPangkep ? 'P' : 'MO'; // Makassar Online mendapatkan kode MO
+        const queueNumber = `${prefix}-${String(queueData.nomor_urut).padStart(3, '0')}`;
+        const queueColor = isPangkep ? '#fd7e14' : '#D32F2F';
+
+        const displayEl = document.getElementById('nomor-antrian-display');
+        displayEl.innerText = queueNumber;
+        displayEl.style.color = queueColor;
+
+        const jalurEl = document.getElementById('jalur-display');
+        jalurEl.innerText = isPangkep ? 'UTD Pangkep & STMC' : 'PMI Makassar & STMC (Online)';
+        jalurEl.style.color = queueColor;
+
         document.getElementById('nama-display').innerText = queueData.nama_pendonor;
 
         // Generate Digital Barcode
         JsBarcode("#barcode-canvas", queueNumber, {
             format: "CODE128",
-            lineColor: "#333",
+            lineColor: "#1e293b",
             width: 3,
             height: 60,
             displayValue: true
@@ -77,32 +86,38 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function subscribeToCurrentServing(tim) {
-        // Polling sederhana atau Realtime Supabase
-        // Karena Vercel/Supabase free tier, kita bisa gunakan polling setiap 5 detik
         fetchCurrentServing(tim);
         setInterval(() => fetchCurrentServing(tim), 5000);
     }
 
     async function fetchCurrentServing(tim) {
         try {
-            // Cari antrian dengan status 'dipanggil' hari ini untuk tim ini
             const startOfDay = new Date();
             startOfDay.setHours(0, 0, 0, 0);
             const startIso = startOfDay.toISOString();
+            const timFilter = tim === 'M' ? ['M', 'MM', 'MO'] : ['P'];
             
             const { data, error } = await supabaseClient
                 .from('antrian')
-                .select('nomor_urut')
-                .eq('kode_tim', tim)
+                .select('*')
+                .in('kode_tim', timFilter)
                 .eq('status', 'dipanggil')
                 .gte('waktu_ambil', startIso)
                 .order('waktu_panggil', { ascending: false })
                 .limit(1);
 
+            const servingEl = document.getElementById('current-serving-display');
             if (data && data.length > 0) {
-                document.getElementById('current-serving-display').innerText = `${tim}-${String(data[0].nomor_urut).padStart(3, '0')}`;
+                const item = data[0];
+                const kode = (item.kode_tim || '').toUpperCase();
+                const metode = (item.metode_input || '').toUpperCase();
+                let prefix = 'MO';
+                if (kode === 'P') prefix = 'P';
+                else if (kode === 'MM' || (kode === 'M' && metode === 'MANUAL')) prefix = 'MM';
+
+                servingEl.innerText = `${prefix}-${String(item.nomor_urut).padStart(3, '0')}`;
             } else {
-                document.getElementById('current-serving-display').innerText = '--';
+                servingEl.innerText = '--';
             }
         } catch (error) {
             console.error('Error fetching current serving:', error);
