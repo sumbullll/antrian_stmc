@@ -1,7 +1,8 @@
 // js/display.js - TV Display Ruang Tunggu Donor Darah STMC
 
 let displayTim = null;
-let lastUpdate = null;
+let lastAnnouncedPanggilTime = null;
+let isFirstDisplayLoad = true;
 let isAudioInitialized = false;
 let pollInterval = null;
 
@@ -253,12 +254,33 @@ async function fetchCurrentDisplay() {
         // Render Antrian Aktif (Kiri)
         updateUI(activeItems);
 
-        // Audio Announcement dipicu jika ada pembaruan pada item yang paling baru
+        // Audio Announcement dipicu HANYA jika ada pemanggilan baru:
+        // (Panggil Selanjutnya, Panggil Ulang, atau Klik Icon Speaker)
+        // Tombol Selesai, Lewati, atau Hapus TIDAK AKAN memicu suara!
         if (activeItems.length > 0) {
             const currentItem = activeItems[0];
-            if (lastUpdate !== currentItem.waktu_panggil) {
-                speakAnnouncement(currentItem);
-                lastUpdate = currentItem.waktu_panggil;
+            const currentPanggilTime = currentItem.waktu_panggil ? new Date(currentItem.waktu_panggil).getTime() : 0;
+
+            if (isFirstDisplayLoad) {
+                // Saat pertama kali TV dibuka atau di-reload, simpan patokan waktu tanpa memicu suara
+                lastAnnouncedPanggilTime = currentPanggilTime;
+                isFirstDisplayLoad = false;
+            } else {
+                // Suara HANYA berbunyi jika waktu_panggil bertambah baru (strictly greater)
+                if (currentPanggilTime > (lastAnnouncedPanggilTime || 0)) {
+                    speakAnnouncement(currentItem);
+                    lastAnnouncedPanggilTime = currentPanggilTime;
+                } else if (currentPanggilTime < (lastAnnouncedPanggilTime || 0)) {
+                    // Ketika nomor selesai/dilewati, antrian lama bergeser menjadi index 0.
+                    // Jangan bunyikan suara, cukup perbarui patokan waktu
+                    lastAnnouncedPanggilTime = currentPanggilTime;
+                }
+            }
+        } else {
+            // Ketika semua antrian selesai atau kosong
+            lastAnnouncedPanggilTime = 0;
+            if ('speechSynthesis' in window && window.speechSynthesis.speaking) {
+                window.speechSynthesis.cancel();
             }
         }
         
