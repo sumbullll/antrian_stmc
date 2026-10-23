@@ -200,6 +200,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 let lastWaitingHTML = '';
+const CALLING_DURATION_MS = 20 * 1000; // Durasi 20 detik kotak naik & berkedip menyala
+let currentActiveQueues = [];
+
+// Ticker 1 detik untuk transisi mulus otomatis saat durasi 20 detik habis
+setInterval(() => {
+    if (currentActiveQueues && currentActiveQueues.length > 0) {
+        updateUI(currentActiveQueues);
+    }
+}, 1000);
 
 // --- FETCH DATA DARI SUPABASE ---
 async function fetchCurrentDisplay() {
@@ -238,6 +247,8 @@ async function fetchCurrentDisplay() {
         // Deduplikasi antrian aktif agar tidak ada nomor yang muncul ganda di layar
         const activeItems = deduplicateQueues(resPanggil.data || []);
         const waitingItems = deduplicateQueues(resTunggu.data || []);
+
+        currentActiveQueues = activeItems;
 
         // Render Antrian Aktif (Kiri)
         updateUI(activeItems);
@@ -308,7 +319,7 @@ setInterval(() => {
     }
 }, 45);
 
-// --- RENDER ANTRIAN AKTIF: KOTAK ATAS (SEDANG DIPANGGIL) & KOTAK BAWAH (SEDANG DILAYANI) ---
+// --- RENDER ANTRIAN AKTIF: OPSI A (KOTAK SERAGAM, PANGGUNG PUTIH BERSIH, TIMER 20 DETIK) ---
 function updateUI(items) {
     const container = document.getElementById('tv-active-container') || document.getElementById('tv-active-grid');
     if (!container) return;
@@ -317,18 +328,6 @@ function updateUI(items) {
     const displayItems = deduplicateQueues(items);
     const count = displayItems.length;
 
-    // Update deskripsi status bed aktif
-    const descBadge = document.getElementById('tv-active-status-desc');
-    if (descBadge) {
-        if (count === 0) {
-            descBadge.innerText = 'Bed Donor Siap';
-        } else if (count === 1) {
-            descBadge.innerText = '1 Pasien Sedang Dipanggil';
-        } else {
-            descBadge.innerText = `1 Dipanggil • ${count - 1} di Bed Donor`;
-        }
-    }
-
     if (count === 0) {
         container.innerHTML = `
             <div class="my-auto text-center py-5">
@@ -336,86 +335,95 @@ function updateUI(items) {
                 <h3 class="text-muted fw-semibold" style="font-size: 1.8vw;">Silakan Menunggu Panggilan</h3>
             </div>
         `;
+        const descBadge = document.getElementById('tv-active-status-desc');
+        if (descBadge) descBadge.innerText = 'Bed Donor Siap';
         return;
     }
 
-    // 1. Antrian paling baru dipanggil -> Kotak Utama di Atas (Hero Calling Card)
-    const callingItem = displayItems[0];
-    const servingItems = displayItems.slice(1);
-    const callingInfo = getTicketInfo(callingItem);
-    const callingNama = (callingItem.nama_pendonor && callingItem.nama_pendonor !== '-') ? callingItem.nama_pendonor : 'Peserta Donor';
+    // Evaluasi apakah antrian paling baru sedang dalam periode 20 detik pemanggilan
+    const candidate = displayItems[0];
+    let isCallingActive = false;
+    let callingItem = null;
+    let servingItems = [];
 
-    const isSolo = servingItems.length === 0;
-    const heroNumSize = isSolo ? '7.5vw' : '5vw';
-    const heroNameSize = isSolo ? '2.3vw' : '1.7vw';
-    const heroBadgeSize = isSolo ? '1.1vw' : '0.95vw';
-    const heroPadding = isSolo ? 'py-4 px-4' : 'py-3 px-3';
+    if (candidate && candidate.waktu_panggil) {
+        const panggilTime = new Date(candidate.waktu_panggil).getTime();
+        const elapsed = Date.now() - panggilTime;
+        if (elapsed >= 0 && elapsed < CALLING_DURATION_MS) {
+            isCallingActive = true;
+            callingItem = candidate;
+            servingItems = displayItems.slice(1);
+        } else {
+            isCallingActive = false;
+            callingItem = null;
+            servingItems = displayItems;
+        }
+    } else {
+        isCallingActive = false;
+        callingItem = null;
+        servingItems = displayItems;
+    }
 
-    let heroHTML = `
-        <!-- KOTAK ATAS: SEDANG DIPANGGIL (Penuh Warna Sesuai Karcis, Berkedip Menyala, Terangkat ke Atas) -->
-        <div class="hero-calling-wrapper mb-3" style="position: relative; z-index: 10;">
-            <div class="card border-0 text-white ${callingInfo.heroPulseClass}" 
-                 style="background: ${callingInfo.heroGradient}; border-radius: 20px; box-shadow: 0 12px 32px rgba(0,0,0,0.2);">
-                <div class="card-body ${heroPadding} text-center d-flex flex-column align-items-center justify-content-center">
-                    
-                    <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
-                        <span class="badge hero-calling-badge px-3 py-1 fw-bolder text-uppercase" 
-                              style="font-size: ${heroBadgeSize}; letter-spacing: 1px;">
-                            🔔 SEDANG DIPANGGIL
-                        </span>
-                        <span class="badge text-white px-3 py-1 fw-bold" 
-                              style="background: rgba(255,255,255,0.22); font-size: ${heroBadgeSize}; border-radius: 20px; letter-spacing: 0.5px;">
-                            ${callingInfo.badgeType}
-                        </span>
+    // Update status badge di pojok atas
+    const descBadge = document.getElementById('tv-active-status-desc');
+    if (descBadge) {
+        if (isCallingActive) {
+            descBadge.innerText = `1 Sedang Dipanggil • ${servingItems.length} di Bed Donor`;
+        } else {
+            descBadge.innerText = `${servingItems.length} Pasien di Bed Donor`;
+        }
+    }
+
+    // 1. AREA PANGGUNG ATAS (Hanya terisi saat ada panggilan aktif 20 detik, jika tidak maka PUTIH BERSIH)
+    let stageHTML = '';
+    if (isCallingActive && callingItem) {
+        const callingInfo = getTicketInfo(callingItem);
+        const callingNama = (callingItem.nama_pendonor && callingItem.nama_pendonor !== '-') ? callingItem.nama_pendonor : 'Peserta Donor';
+
+        stageHTML = `
+            <!-- AREA PANGGUNG ATAS: KOTAK NAIK MUNCUL DI ATAS (UKURAN SERAGAM, WARNA PENUH, BERKEDIP MENYALA) -->
+            <div class="d-flex justify-content-center align-items-center w-100 mb-3" style="min-height: 195px; background: transparent;">
+                <div style="width: 100%; max-width: 480px;">
+                    <div class="card uniform-queue-card border-0 text-white card-calling-enter ${callingInfo.heroPulseClass}" 
+                         style="background: ${callingInfo.heroGradient}; box-shadow: 0 12px 32px rgba(0,0,0,0.22);">
+                        <div class="card-body py-3 px-3 text-center d-flex flex-column justify-content-center align-items-center">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                                <span class="badge hero-calling-badge px-3 py-1 fw-bolder text-uppercase" style="font-size: 0.9vw; letter-spacing: 1px;">
+                                    🔔 SEDANG DIPANGGIL
+                                </span>
+                                <span class="badge text-white px-3 py-1 fw-bold" style="background: rgba(255,255,255,0.25); font-size: 0.85vw; border-radius: 20px;">
+                                    ${callingInfo.badgeType}
+                                </span>
+                            </div>
+                            <div class="fw-bolder my-1" style="font-size: 3.8vw; line-height: 1; letter-spacing: 2.5px; text-shadow: 0 4px 14px rgba(0,0,0,0.3);">
+                                ${callingInfo.fullCode}
+                            </div>
+                            <div class="fw-bold text-white text-truncate w-100" style="font-size: 1.4vw; text-shadow: 0 2px 8px rgba(0,0,0,0.25);">
+                                ${callingNama}
+                            </div>
+                            <small class="text-white-50 mt-1" style="font-size: 0.8vw;">
+                                Silakan segera menuju Bed Donor
+                            </small>
+                        </div>
                     </div>
-
-                    <div class="fw-bolder my-1" 
-                         style="font-size: ${heroNumSize}; line-height: 1; letter-spacing: 2.5px; text-shadow: 0 4px 14px rgba(0,0,0,0.3);">
-                        ${callingInfo.fullCode}
-                    </div>
-
-                    <div class="fw-bold text-white text-truncate w-100" 
-                         style="font-size: ${heroNameSize}; letter-spacing: 0.5px; text-shadow: 0 2px 8px rgba(0,0,0,0.25);">
-                        ${callingNama}
-                    </div>
-
-                    <small class="text-white-50 mt-1" style="font-size: ${isSolo ? '1vw' : '0.85vw'};">
-                        Silakan segera memasuki Ruang Donor Darah
-                    </small>
                 </div>
             </div>
-        </div>
-    `;
+        `;
+    } else {
+        // Area panggung putih bersih tanpa garis, tanpa teks
+        stageHTML = `
+            <div class="d-flex justify-content-center align-items-center w-100" style="min-height: 40px; background: transparent;"></div>
+        `;
+    }
 
-    // 2. Antrian lain yang sedang dilayani di bed-bed donor -> Kotak-Kotak di Bawah
+    // 2. AREA KOTAK-KOTAK BED DONOR (SEDANG DILAYANI)
     let servingHTML = '';
-    if (!isSolo) {
+    if (servingItems.length > 0) {
         let colClass = 'col-6';
-        let sNumSize = '3.5vw';
-        let sNameSize = '1.3vw';
-        let sBadgeSize = '0.85vw';
-
-        if (servingItems.length === 1) {
-            colClass = 'col-12';
-            sNumSize = '4.2vw';
-            sNameSize = '1.5vw';
-            sBadgeSize = '0.9vw';
-        } else if (servingItems.length <= 4) {
-            colClass = 'col-6';
-            sNumSize = '3.2vw';
-            sNameSize = '1.2vw';
-            sBadgeSize = '0.8vw';
-        } else if (servingItems.length <= 6) {
-            colClass = 'col-4';
-            sNumSize = '2.5vw';
-            sNameSize = '1.05vw';
-            sBadgeSize = '0.75vw';
-        } else {
-            colClass = 'col-3';
-            sNumSize = '2.0vw';
-            sNameSize = '0.9vw';
-            sBadgeSize = '0.7vw';
-        }
+        if (servingItems.length === 1) colClass = 'col-12 col-md-8 mx-auto';
+        else if (servingItems.length <= 4) colClass = 'col-6';
+        else if (servingItems.length <= 6) colClass = 'col-4';
+        else colClass = 'col-3';
 
         const cardsHTML = servingItems.map(item => {
             const info = getTicketInfo(item);
@@ -423,29 +431,35 @@ function updateUI(items) {
 
             return `
                 <div class="${colClass} p-1 p-xl-2">
-                    <div class="card shadow-sm h-100 border-0" 
-                         style="background-color: #ffffff; border: 2px solid ${info.borderSoft} !important; border-top: 5px solid ${info.color} !important; border-radius: 14px;">
-                        <div class="card-body py-2 px-2 text-center d-flex flex-column justify-content-center align-items-center">
-                            <div class="badge badge-status-layani px-2 py-1 mb-1" style="font-size: ${sBadgeSize};">
-                                🩺 SEDANG DILAYANI
+                    <div class="card uniform-queue-card shadow-sm border-0" 
+                         style="background-color: #ffffff; border: 2px solid ${info.borderSoft} !important; border-top: 5px solid ${info.color} !important;">
+                        <div class="card-body py-3 px-3 text-center d-flex flex-column justify-content-center align-items-center">
+                            <div class="d-flex align-items-center justify-content-center gap-2 mb-1">
+                                <span class="badge badge-status-layani px-2 py-1" style="font-size: 0.8vw;">
+                                    🩺 SEDANG DILAYANI
+                                </span>
+                                <span class="fw-bold" style="color: ${info.color}; font-size: 0.8vw;">
+                                    ${info.badgeType}
+                                </span>
                             </div>
-                            <div class="fw-bold mb-1" style="color: ${info.color}; font-size: ${sBadgeSize}; letter-spacing: 0.5px;">
-                                ${info.badgeType}
-                            </div>
-                            <div style="font-size: ${sNumSize}; font-weight: 900; line-height: 1; color: ${info.color}; letter-spacing: 1.2px;">
+                            <div class="fw-bolder my-1" style="font-size: 3.8vw; line-height: 1; color: ${info.color}; letter-spacing: 2px;">
                                 ${info.fullCode}
                             </div>
-                            <div class="fw-semibold text-secondary text-truncate w-100 mt-1" style="font-size: ${sNameSize};">
+                            <div class="fw-semibold text-secondary text-truncate w-100 mt-1" style="font-size: 1.4vw;">
                                 ${nama}
                             </div>
+                            <small class="text-muted mt-1" style="font-size: 0.8vw;">
+                                Sedang dalam proses donor
+                            </small>
                         </div>
                     </div>
                 </div>
             `;
         }).join('');
 
+        const maxHeightStyle = isCallingActive ? 'max-height: calc(100vh - 440px);' : 'max-height: calc(100vh - 280px);';
+
         servingHTML = `
-            <!-- KOTAK-KOTAK BAWAH: SEDANG DILAYANI DI BED DONOR (Tenang, Rapi, Teratur) -->
             <div class="serving-section flex-grow-1 d-flex flex-column" style="min-height: 0;">
                 <div class="d-flex align-items-center justify-content-between mb-2 px-1">
                     <span class="fw-bold text-secondary text-uppercase" style="font-size: 0.9vw; letter-spacing: 0.8px;">
@@ -455,14 +469,14 @@ function updateUI(items) {
                         ${servingItems.length} Pasien
                     </span>
                 </div>
-                <div class="row g-2 flex-grow-1 align-content-start w-100 m-0" style="overflow-y: auto; max-height: calc(100vh - 470px);">
+                <div class="row g-2 flex-grow-1 align-content-start w-100 m-0" style="overflow-y: auto; ${maxHeightStyle}">
                     ${cardsHTML}
                 </div>
             </div>
         `;
     }
 
-    container.innerHTML = heroHTML + servingHTML;
+    container.innerHTML = stageHTML + servingHTML;
 }
 
 // --- JAM DIGITAL ---

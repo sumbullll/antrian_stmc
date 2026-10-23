@@ -28,9 +28,33 @@ input[type="text"], input[type="number"], select {
     animation: flash 1.5s ease-in-out;
 }
 
-/* --- TV Display Card Animations (Revisi 2: Kotak Penuh Warna, Naik Muncul di Atas, Berkedip Menyala) --- */
+/* --- TV Display Card Animations (Revisi 2: Opsi A - Ukuran Seragam, Panggung Putih Bersih, Durasi 20s) --- */
 
-/* 1. Animasi Kotak Naik ke Atas & Berkedip Menyala (Hero Calling Card) */
+/* 1. Desain Kartu Seragam (Uniform Size) */
+.uniform-queue-card {
+    border-radius: 18px;
+    width: 100%;
+    min-height: 185px;
+    transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 2. Animasi Meluncur Naik saat Dipanggil (Slide Up & Pop In) */
+@keyframes slideUpCalling {
+    0% {
+        opacity: 0.4;
+        transform: translateY(35px) scale(0.96);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.card-calling-enter {
+    animation: slideUpCalling 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* 3. Animasi Berdenyut Menyala & Elevasi (Pulsating Glow Aura) */
 @keyframes heroFloatOrange {
     0% {
         transform: translateY(0) scale(1);
@@ -38,8 +62,8 @@ input[type="text"], input[type="number"], select {
         filter: brightness(1);
     }
     50% {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 20px 48px rgba(230, 81, 0, 0.65), 0 0 35px rgba(255, 145, 0, 0.55);
+        transform: translateY(-6px) scale(1.018);
+        box-shadow: 0 18px 45px rgba(230, 81, 0, 0.65), 0 0 35px rgba(255, 145, 0, 0.55);
         filter: brightness(1.12);
     }
     100% {
@@ -56,8 +80,8 @@ input[type="text"], input[type="number"], select {
         filter: brightness(1);
     }
     50% {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 20px 48px rgba(21, 101, 192, 0.65), 0 0 35px rgba(33, 150, 243, 0.55);
+        transform: translateY(-6px) scale(1.018);
+        box-shadow: 0 18px 45px rgba(21, 101, 192, 0.65), 0 0 35px rgba(33, 150, 243, 0.55);
         filter: brightness(1.12);
     }
     100% {
@@ -74,8 +98,8 @@ input[type="text"], input[type="number"], select {
         filter: brightness(1);
     }
     50% {
-        transform: translateY(-8px) scale(1.02);
-        box-shadow: 0 20px 48px rgba(198, 40, 40, 0.65), 0 0 35px rgba(239, 83, 80, 0.55);
+        transform: translateY(-6px) scale(1.018);
+        box-shadow: 0 18px 45px rgba(198, 40, 40, 0.65), 0 0 35px rgba(239, 83, 80, 0.55);
         filter: brightness(1.12);
     }
     100% {
@@ -87,20 +111,17 @@ input[type="text"], input[type="number"], select {
 
 .hero-calling-P {
     animation: heroFloatOrange 2s infinite ease-in-out;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .hero-calling-MM {
     animation: heroFloatBlue 2s infinite ease-in-out;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .hero-calling-MO {
     animation: heroFloatRed 2s infinite ease-in-out;
-    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* 2. Animasi Denyut Badge Panggilan */
+/* 4. Animasi Denyut Badge Panggilan */
 @keyframes heroBadgePulse {
     0%, 100% {
         transform: scale(1);
