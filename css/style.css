@@ -28,96 +28,97 @@ input[type="text"], input[type="number"], select {
     animation: flash 1.5s ease-in-out;
 }
 
-/* --- TV Display Card Animations --- */
+/* --- TV Display Card Animations (Revisi 2: Kotak Penuh Warna, Naik Muncul di Atas, Berkedip Menyala) --- */
 
-/* Efek Berdenyut Menyala (Pulse Glow) untuk Antrian yang BARU DIPANGGIL */
-@keyframes callGlowPulse {
+/* 1. Animasi Kotak Naik ke Atas & Berkedip Menyala (Hero Calling Card) */
+@keyframes heroFloatOrange {
     0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.6);
+        transform: translateY(0) scale(1);
+        box-shadow: 0 8px 24px rgba(230, 81, 0, 0.35);
+        filter: brightness(1);
     }
     50% {
-        transform: scale(1.02);
-        box-shadow: 0 0 0 16px rgba(220, 53, 69, 0);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 48px rgba(230, 81, 0, 0.65), 0 0 35px rgba(255, 145, 0, 0.55);
+        filter: brightness(1.12);
     }
     100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(220, 53, 69, 0);
+        transform: translateY(0) scale(1);
+        box-shadow: 0 8px 24px rgba(230, 81, 0, 0.35);
+        filter: brightness(1);
     }
 }
 
-@keyframes callGlowPulseOrange {
+@keyframes heroFloatBlue {
     0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(253, 126, 20, 0.65);
+        transform: translateY(0) scale(1);
+        box-shadow: 0 8px 24px rgba(21, 101, 192, 0.35);
+        filter: brightness(1);
     }
     50% {
-        transform: scale(1.02);
-        box-shadow: 0 0 0 16px rgba(253, 126, 20, 0);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 48px rgba(21, 101, 192, 0.65), 0 0 35px rgba(33, 150, 243, 0.55);
+        filter: brightness(1.12);
     }
     100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(253, 126, 20, 0);
+        transform: translateY(0) scale(1);
+        box-shadow: 0 8px 24px rgba(21, 101, 192, 0.35);
+        filter: brightness(1);
     }
 }
 
-@keyframes callGlowPulseBlue {
+@keyframes heroFloatRed {
     0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0.65);
+        transform: translateY(0) scale(1);
+        box-shadow: 0 8px 24px rgba(198, 40, 40, 0.35);
+        filter: brightness(1);
     }
     50% {
-        transform: scale(1.02);
-        box-shadow: 0 0 0 16px rgba(25, 118, 210, 0);
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 20px 48px rgba(198, 40, 40, 0.65), 0 0 35px rgba(239, 83, 80, 0.55);
+        filter: brightness(1.12);
     }
     100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(25, 118, 210, 0);
+        transform: translateY(0) scale(1);
+        box-shadow: 0 8px 24px rgba(198, 40, 40, 0.35);
+        filter: brightness(1);
     }
 }
 
-@keyframes callGlowPulseRed {
-    0% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(211, 47, 47, 0.65);
-    }
-    50% {
-        transform: scale(1.02);
-        box-shadow: 0 0 0 16px rgba(211, 47, 47, 0);
-    }
-    100% {
-        transform: scale(1);
-        box-shadow: 0 0 0 0 rgba(211, 47, 47, 0);
-    }
+.hero-calling-P {
+    animation: heroFloatOrange 2s infinite ease-in-out;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.calling-pulse-P {
-    animation: callGlowPulseOrange 2.2s infinite ease-in-out;
+.hero-calling-MM {
+    animation: heroFloatBlue 2s infinite ease-in-out;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.calling-pulse-MM {
-    animation: callGlowPulseBlue 2.2s infinite ease-in-out;
+.hero-calling-MO {
+    animation: heroFloatRed 2s infinite ease-in-out;
+    transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-.calling-pulse-MO {
-    animation: callGlowPulseRed 2.2s infinite ease-in-out;
-}
-
-/* Animasi Denyut Badge "SEDANG DIPANGGIL" */
-@keyframes badgeBlink {
+/* 2. Animasi Denyut Badge Panggilan */
+@keyframes heroBadgePulse {
     0%, 100% {
-        opacity: 1;
         transform: scale(1);
+        background-color: #ffffff;
+        color: #0f172a;
     }
     50% {
-        opacity: 0.88;
         transform: scale(1.06);
+        background-color: #ffeb3b; /* Kuning cerah perhatian */
+        color: #000000;
+        box-shadow: 0 0 16px rgba(255, 235, 59, 0.85);
     }
 }
 
-.pulse-badge {
-    animation: badgeBlink 1.6s infinite ease-in-out;
-    display: inline-block;
+.hero-calling-badge {
+    animation: heroBadgePulse 1.6s infinite ease-in-out;
+    border-radius: 50rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 /* Card Status Badges */
@@ -130,7 +131,7 @@ input[type="text"], input[type="number"], select {
 
 .badge-status-layani {
     font-weight: 700;
-    letter-spacing: 1px;
+    letter-spacing: 0.8px;
     border-radius: 50rem;
     background-color: #475569;
     color: #ffffff;

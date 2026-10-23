@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Display Ruang Tunggu - Sistem Antrian Donor Darah</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css?v=3">
+    <link rel="stylesheet" href="css/style.css?v=4">
     <style>
         body {
             background-color: #f8fafc;
@@ -104,21 +104,21 @@
         <!-- Konten Utama Display TV -->
         <div class="container-fluid flex-grow-1 p-0" style="height: calc(100vh - 165px); overflow: hidden;">
             <div class="row w-100 h-100 m-0">
-                <!-- Bagian Kiri: Sedang Dipanggil & Sedang Dilayani -->
-                <div class="col-8 d-flex flex-column bg-white p-4 h-100" style="border-right: 3px solid #e2e8f0;">
-                    <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h4 class="fw-bold m-0 text-secondary" style="letter-spacing: 1px;">
+                <!-- Bagian Kiri: Sedang Dipanggil (Atas) & Sedang Dilayani di Bed Donor (Bawah) -->
+                <div class="col-8 d-flex flex-column bg-white p-3 p-xl-4 h-100" style="border-right: 3px solid #e2e8f0;">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h4 class="fw-bold m-0 text-secondary" style="letter-spacing: 1px; font-size: 1.2vw;">
                             RUANG DONOR DARAH
                         </h4>
-                        <span class="badge bg-light text-secondary border px-3 py-2 fw-semibold" id="tv-active-status-desc">
-                            Pasien di Bed Donor
+                        <span class="badge bg-light text-secondary border px-3 py-2 fw-semibold" id="tv-active-status-desc" style="font-size: 0.85vw;">
+                            Bed Donor Siap
                         </span>
                     </div>
 
-                    <div id="tv-active-grid" class="row g-3 flex-grow-1 align-content-center justify-content-center text-center w-100 m-0" style="overflow-y: auto; max-height: calc(100vh - 235px);">
-                        <div class="col-12 text-muted my-auto">
-                            <h1 class="display-1 fw-bold text-secondary">--</h1>
-                            <h3 class="name-box text-muted">Silakan Menunggu Panggilan</h3>
+                    <div id="tv-active-container" class="flex-grow-1 d-flex flex-column" style="overflow: hidden; max-height: calc(100vh - 225px);">
+                        <div class="col-12 text-muted my-auto text-center py-5">
+                            <h1 class="display-1 fw-bold text-secondary" style="font-size: 6vw;">--</h1>
+                            <h3 class="text-muted fw-semibold" style="font-size: 1.8vw;">Silakan Menunggu Panggilan</h3>
                         </div>
                     </div>
                 </div>
@@ -155,6 +155,6 @@
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/config.js"></script>
-    <script src="js/display.js?v=12"></script>
+    <script src="js/display.js?v=13"></script>
 </body>
 </html>
