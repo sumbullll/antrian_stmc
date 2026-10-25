@@ -93,6 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     async function fetchCurrentServing(tim) {
         try {
             const startOfDay = new Date();
+            startOfDay.setDate(startOfDay.getDate() - 3);
             startOfDay.setHours(0, 0, 0, 0);
             const startIso = startOfDay.toISOString();
             const timFilter = tim === 'M' ? ['M', 'MM', 'MO'] : ['P'];

@@ -216,7 +216,9 @@ async function fetchCurrentDisplay() {
     if (!displayTim) return;
 
     try {
+        // Rentang data 3 hari terakhir agar data tidak ter-reset setiap pergantian hari 24 jam
         const startOfDay = new Date();
+        startOfDay.setDate(startOfDay.getDate() - 3);
         startOfDay.setHours(0, 0, 0, 0);
         const startIso = startOfDay.toISOString();
         

@@ -113,11 +113,12 @@ document.addEventListener('DOMContentLoaded', () => {
         return n;
     }
 
-    // Mendapatkan awal hari lokal (00:00:00)
+    // Mendapatkan batas awal rentang data (3 hari terakhir dari 00:00:00)
     function getStartOfDayIso() {
-        const startOfDay = new Date();
-        startOfDay.setHours(0, 0, 0, 0);
-        return startOfDay.toISOString();
+        const d = new Date();
+        d.setDate(d.getDate() - 3);
+        d.setHours(0, 0, 0, 0);
+        return d.toISOString();
     }
 
     // --- UPDATE UI BERDASARKAN TIM ---
@@ -389,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const button = e.currentTarget;
                 const id = button.getAttribute('data-id');
                 const nomor = button.getAttribute('data-nomor');
-                if (confirm(`Yakin ingin menghapus antrian ${nomor}? Data akan dihapus dari antrian hari ini.`)) {
+                if (confirm(`Yakin ingin menghapus antrian ${nomor}? Data akan dihapus dari daftar antrian.`)) {
                     const { error } = await supabaseClient.from('antrian').delete().eq('id_antrian', id);
                     if (error) {
                         alert('Gagal menghapus antrian: ' + error.message);
@@ -623,7 +624,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
 
                 if (exists) {
-                    alert(`Nomor ${activePrefix}-${String(nextNum).padStart(3, '0')} sudah ada di antrian hari ini! Silakan gunakan nomor lain.`);
+                    alert(`Nomor ${activePrefix}-${String(nextNum).padStart(3, '0')} sudah ada di antrian aktif! Silakan gunakan nomor lain.`);
                     btnSubmit.disabled = false;
                     return;
                 }
@@ -732,7 +733,7 @@ document.addEventListener('DOMContentLoaded', () => {
             if (error) throw error;
 
             if (!data || data.length === 0) {
-                alert('Tidak ada data antrian untuk diekspor hari ini.');
+                alert('Tidak ada data antrian untuk diekspor.');
                 return;
             }
 

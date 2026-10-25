@@ -46,7 +46,7 @@ BEGIN
     SELECT COALESCE(MAX(nomor_urut), 0) + 1 INTO v_next_nomor
     FROM antrian
     WHERE kode_tim = CAST(p_kode_tim AS CHAR(1))
-      AND DATE(waktu_ambil) = CURRENT_DATE;
+      AND waktu_ambil >= (CURRENT_DATE - INTERVAL '3 days');
 
     -- Insert baris baru
     INSERT INTO antrian (kode_tim, nomor_urut, nama_pendonor, metode_input)
