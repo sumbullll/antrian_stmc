@@ -158,18 +158,21 @@ input[type="text"], input[type="number"], select {
     color: #ffffff;
 }
 
-/* Custom Scrollbar */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+/* Custom Scrollbar untuk Container Bed Donor TV */
+#serving-scroll-container {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(148, 163, 184, 0.45) transparent;
 }
-::-webkit-scrollbar-track {
-    background: #f1f5f9;
+#serving-scroll-container::-webkit-scrollbar {
+    width: 5px;
 }
-::-webkit-scrollbar-thumb {
-    background: #cbd5e1;
+#serving-scroll-container::-webkit-scrollbar-track {
+    background: transparent;
+}
+#serving-scroll-container::-webkit-scrollbar-thumb {
+    background: rgba(148, 163, 184, 0.45);
     border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
-    background: #94a3b8;
+#serving-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: rgba(100, 116, 139, 0.7);
 }

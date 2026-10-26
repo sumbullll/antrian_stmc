@@ -327,7 +327,7 @@ async function fetchCurrentDisplay() {
     }
 }
 
-// --- AUTO-SCROLL HALUS DAFTAR MENUNGGU ---
+// --- AUTO-SCROLL HALUS DAFTAR MENUNGGU (KANAN) ---
 let isPausedAtBottom = false;
 setInterval(() => {
     const scrollBox = document.getElementById('waiting-scroll-container');
@@ -343,6 +343,30 @@ setInterval(() => {
     }
 }, 45);
 
+// --- AUTO-SCROLL HALUS PASIEN DI BED DONOR (KIRI) ---
+// Otomatis mendeteksi saat antrian menumpuk melebihi tinggi layar TV (misal 9 pasien atau lebih)
+let isServingPaused = false;
+let isServingUserHover = false;
+
+setInterval(() => {
+    const scrollBox = document.getElementById('serving-scroll-container');
+    if (scrollBox && scrollBox.scrollHeight > scrollBox.clientHeight + 8 && !isServingPaused && !isServingUserHover) {
+        scrollBox.scrollTop += 1;
+        if (scrollBox.scrollTop >= scrollBox.scrollHeight - scrollBox.clientHeight - 2) {
+            isServingPaused = true;
+            setTimeout(() => {
+                // Jeda 2.5 detik di bawah agar pasien terbaca jelas, lalu kembali perlahan ke atas
+                scrollBox.scrollTo({ top: 0, behavior: 'smooth' });
+                setTimeout(() => {
+                    isServingPaused = false;
+                }, 2000); // Jeda 2 detik di posisi atas sebelum mulai scroll turun lagi
+            }, 2500);
+        }
+    }
+}, 45);
+
+let lastActiveHTML = '';
+
 // --- RENDER ANTRIAN AKTIF: OPSI A (KOTAK SERAGAM, PANGGUNG PUTIH BERSIH, TIMER 20 DETIK) ---
 function updateUI(items) {
     const container = document.getElementById('tv-active-container') || document.getElementById('tv-active-grid');
@@ -353,6 +377,7 @@ function updateUI(items) {
     const count = displayItems.length;
 
     if (count === 0) {
+        lastActiveHTML = '';
         container.innerHTML = `
             <div class="my-auto text-center py-5">
                 <h1 class="display-1 fw-bold text-secondary" style="font-size: 6vw;">--</h1>
@@ -493,14 +518,38 @@ function updateUI(items) {
                         ${servingItems.length} Pasien
                     </span>
                 </div>
-                <div class="row g-2 flex-grow-1 align-content-start w-100 m-0" style="overflow-y: auto; ${maxHeightStyle}">
+                <div id="serving-scroll-container" class="row g-2 flex-grow-1 align-content-start w-100 m-0" style="overflow-y: auto; ${maxHeightStyle}">
                     ${cardsHTML}
                 </div>
             </div>
         `;
     }
 
-    container.innerHTML = stageHTML + servingHTML;
+    const newHTML = stageHTML + servingHTML;
+    if (newHTML !== lastActiveHTML) {
+        // Simpan posisi scroll sebelum DOM diperbarui
+        const existingScroll = document.getElementById('serving-scroll-container');
+        const prevScrollTop = existingScroll ? existingScroll.scrollTop : 0;
+
+        lastActiveHTML = newHTML;
+        container.innerHTML = newHTML;
+
+        // Pulihkan posisi scroll setelah DOM diperbarui agar tidak mental ke atas
+        const updatedScroll = document.getElementById('serving-scroll-container');
+        if (updatedScroll && prevScrollTop > 0) {
+            updatedScroll.scrollTop = prevScrollTop;
+        }
+
+        // Pasang event listener hover / sentuh agar auto-scroll tidak mengganggu saat dilihat manual
+        if (updatedScroll) {
+            updatedScroll.addEventListener('mouseenter', () => { isServingUserHover = true; });
+            updatedScroll.addEventListener('mouseleave', () => { isServingUserHover = false; });
+            updatedScroll.addEventListener('touchstart', () => { isServingUserHover = true; }, { passive: true });
+            updatedScroll.addEventListener('touchend', () => { 
+                setTimeout(() => { isServingUserHover = false; }, 2500); 
+            }, { passive: true });
+        }
+    }
 }
 
 // --- JAM DIGITAL ---
